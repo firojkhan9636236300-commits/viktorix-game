@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>VIKTORIX Roulette</title>
+
+<link rel="stylesheet" href="roulette.css">
+
+</head>
+
+<body>
+
+<header>
+
+<h1>🎡 VIKTORIX ROULETTE</h1>
+
+<div class="wallet">
+💰 Balance:
+<span id="balance">10000</span>
+</div>
+
+</header>
+
+<section class="roulette-game">
+
+<h2>0 - 31 Roulette</h2>
+
+<div class="timer">
+Bet Time:
+<span id="timer">15</span>
+</div>
+
+<div id="numbers" class="numbers">
+</div>
+
+<div class="bet-area">
+
+<h3>Your Bets</h3>
+
+<div id="bets">
+No Bets
+</div>
+
+<button id="spinBtn">
+SPIN
+</button>
+
+</div>
+
+<div class="result">
+Winning Number:
+<span id="result">-</span>
+</div>
+
+</section>
+
+<!-- BET POPUP -->
+
+<div id="betModal" class="bet-modal">
+
+<div class="bet-box">
+
+<h2>Place Your Bet</h2>
+
+<p id="betNumber">Number 0</p>
+
+<input
+type="number"
+id="betInput"
+placeholder="Enter Points"
+min="1">
+
+<div class="bet-buttons">
+
+<button id="betOk">
+Place Bet
+</button>
+
+<button id="betCancel">
+Cancel
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<script src="roulette.js"></script>
+
+</body>
+</html>

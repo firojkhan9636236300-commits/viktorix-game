@@ -1,0 +1,305 @@
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
+}
+
+body{
+background:#020b1a;
+color:white;
+min-height:100vh;
+overflow-x:hidden;
+}
+
+
+header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:15px 25px;
+background:#03152f;
+box-shadow:0 0 15px #00c8ff;
+}
+
+
+header h1{
+color:#00e5ff;
+font-size:28px;
+}
+
+
+.wallet{
+background:#072347;
+padding:10px 20px;
+border-radius:10px;
+color:#00e5ff;
+font-size:20px;
+}
+
+
+
+.roulette-game{
+padding:25px;
+text-align:center;
+}
+
+
+.roulette-game h2{
+color:#00c8ff;
+margin-bottom:15px;
+}
+
+
+
+.timer{
+font-size:22px;
+margin:15px;
+color:#fff;
+}
+
+
+
+.numbers{
+
+display:grid;
+grid-template-columns:repeat(8,1fr);
+gap:10px;
+max-width:800px;
+margin:20px auto;
+
+}
+
+
+
+.number{
+
+background:#072347;
+padding:15px;
+border-radius:10px;
+font-size:20px;
+cursor:pointer;
+border:2px solid #00c8ff;
+
+}
+
+
+.number:hover{
+
+background:#00c8ff;
+color:#001325;
+
+}
+
+
+
+.selected{
+
+background:#00e5ff;
+color:#001325;
+
+}
+
+
+
+.bet-area{
+
+margin-top:30px;
+background:#03152f;
+padding:20px;
+border-radius:15px;
+
+}
+
+
+
+#spinBtn{
+
+margin-top:20px;
+padding:15px 50px;
+font-size:22px;
+background:#00c8ff;
+border:none;
+border-radius:10px;
+font-weight:bold;
+
+}
+
+
+
+.result{
+
+margin-top:25px;
+font-size:25px;
+color:#00e5ff;
+
+}
+
+
+
+/* Landscape Mobile */
+
+@media(max-width:800px) and (orientation:landscape){
+
+header h1{
+
+font-size:22px;
+
+}
+
+
+.numbers{
+
+grid-template-columns:repeat(8,1fr);
+
+}
+
+
+.number{
+
+padding:10px;
+font-size:16px;
+
+}
+
+}
+/* ===== BET POPUP ===== */
+
+.bet-modal{
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.7);
+justify-content:center;
+align-items:center;
+z-index:9999;
+}
+
+.bet-box{
+background:#0b1f3a;
+padding:20px;
+border-radius:12px;
+width:300px;
+text-align:center;
+border:2px solid #00bfff;
+}
+
+.bet-box h2{
+color:#00e5ff;
+margin-bottom:15px;
+}
+
+.bet-box p{
+color:white;
+margin-bottom:10px;
+}
+
+.bet-box input{
+width:90%;
+padding:10px;
+font-size:18px;
+border-radius:8px;
+border:none;
+margin-bottom:15px;
+text-align:center;
+}
+
+.bet-buttons{
+display:flex;
+justify-content:space-between;
+gap:10px;
+}
+
+.bet-buttons button{
+flex:1;
+padding:10px;
+font-size:16px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+}
+/* ===== VIKTORIX MOBILE FIX ===== */
+
+@media(max-width:600px){
+
+header{
+    padding:12px;
+}
+
+header h1{
+    font-size:22px;
+}
+
+.wallet{
+    font-size:16px;
+    padding:8px 12px;
+}
+
+
+.roulette-game{
+    padding:15px;
+}
+
+
+.numbers{
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+}
+
+
+.number{
+    padding:14px 5px;
+    font-size:18px;
+    border-radius:12px;
+}
+
+
+/* ===== NEW BET BOARD ===== */
+
+.bet-box{
+    width:90%;
+    max-width:350px;
+    padding:25px;
+    border-radius:20px;
+    background:#051b36;
+    box-shadow:0 0 25px #00c8ff;
+}
+
+
+.bet-box h2{
+    font-size:25px;
+}
+
+
+.bet-box input{
+    width:100%;
+    height:50px;
+    font-size:22px;
+}
+
+
+.bet-buttons button{
+    height:45px;
+    font-size:18px;
+}
+
+
+/* Result */
+
+.result{
+    font-size:22px;
+}
+
+}
+
+
+/* Touch effect */
+
+.number:active{
+    transform:scale(0.92);
+    background:#00e5ff;
+    color:#001325;
+}
