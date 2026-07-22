@@ -12,7 +12,6 @@ min-height:100vh;
 overflow-x:hidden;
 }
 
-
 header{
 display:flex;
 justify-content:space-between;
@@ -302,4 +301,15 @@ header h1{
     transform:scale(0.92);
     background:#00e5ff;
     color:#001325;
+}
+.betPoints {
+    display: block;
+    font-size: 12px;
+}
+.number.winner{
+    background:#00ff00 !important;
+    color:#000;
+    transform:scale(1.15);
+    box-shadow:0 0 20px #00ff00;
+    transition:.3s;
 }

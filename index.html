@@ -1,33 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VIKTORIX</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIKTORIX</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+<script>
+if(localStorage.getItem("loggedIn")!=="true"){
+    window.location.href="login.html";
+}
+</script>
+
 <header>
-  <h1>🎮 VIKTORIX</h1>
-  <nav>
-    <a href="index.html">Home</a>
-    <a href="roulette.html">Roulette</a>
-  </nav>
+<h1>🎮 VIKTORIX</h1>
+
+<nav>
+<a href="index.html">Home</a>
+<a href="roulette.html">Roulette</a>
+<button onclick="logout()">Logout</button>
+</nav>
+
 </header>
 
 <section class="hero">
-  <h2>Welcome to VIKTORIX</h2>
-  <p>Play exciting games and enjoy the experience.</p>
 
-  <a href="roulette.html" class="play-btn">
-    Play Roulette
-  </a>
+<h2>
+Welcome
+<span id="userName"></span>
+</h2>
+
+<p>Play exciting games and enjoy the experience.</p>
+
+<a href="roulette.html" class="play-btn">
+Play Roulette
+</a>
+
 </section>
 
 <footer>
-  <p>© 2026 VIKTORIX. All Rights Reserved.</p>
+<p>© 2026 VIKTORIX. All Rights Reserved.</p>
 </footer>
+
+<script src="login.js"></script>
+
+<script>
+document.getElementById("userName").innerHTML =
+localStorage.getItem("viktorixUser");
+</script>
 
 </body>
 </html>

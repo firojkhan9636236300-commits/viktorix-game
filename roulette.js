@@ -1,182 +1,238 @@
-// ===== VIKTORIX ROULETTE PART 1 =====
-
-let balance = Number(localStorage.getItem("balance")) || 10000;
+let balance = 10000;
 let bets = {};
-let time = 15;
+let time = 60;
 let bettingOpen = true;
 let spinning = false;
 
-let selectedNumber = null;
-
-const balanceEl = document.getElementById("balance");
 const numbersBox = document.getElementById("numbers");
-const timerEl = document.getElementById("timer");
-const resultEl = document.getElementById("result");
-const betsEl = document.getElementById("bets");
+const balanceText = document.getElementById("balance");
+const betsBox = document.getElementById("bets");
+const timeText = document.getElementById("timer");
+const statusText = document.getElementById("status");
+const resultText = document.getElementById("result");
 
-const betModal = document.getElementById("betModal");
-const betNumber = document.getElementById("betNumber");
-const betInput = document.getElementById("betInput");
-const betOk = document.getElementById("betOk");
-const betCancel = document.getElementById("betCancel");
-
-balanceEl.innerText = balance;
-
-function saveBalance() {
-    localStorage.setItem("balance", balance);
-}
-
-function updateBalance() {
-    balanceEl.innerText = balance;
-    saveBalance();
-}
-
+// Create Numbers 0-31
 for (let i = 0; i <= 31; i++) {
 
-    const box = document.createElement("div");
-    box.className = "number";
-    box.innerText = i;
+    let btn = document.createElement("button");
 
-    box.onclick = function () {
+    btn.className = "number";
 
-        if (!bettingOpen || spinning) {
-            alert("Bet Closed");
-            return;
-        }
+    btn.innerHTML = `
+        <span>${i}</span>
+        <small id="point-${i}">0</small>
+    `;
 
-        selectedNumber = i;
-
-        betNumber.innerText = "Number " + i;
-        betInput.value = "";
-        betModal.style.display = "flex";
+    btn.onclick = function () {
+        placeBet(i);
     };
 
-    numbersBox.appendChild(box);
+    numbersBox.appendChild(btn);
 }
 
-betCancel.onclick = function () {
-    betModal.style.display = "none";
-};
+// Place Bet
+function placeBet(number){
 
-betOk.onclick = function () {
-
-    let amount = Number(betInput.value);
-
-    if (isNaN(amount) || amount <= 0) {
-        alert("Valid points enter karo");
+    if(!bettingOpen){
+        alert("Bet Closed");
         return;
     }
 
-    if (amount > balance) {
-        alert("Balance kam hai");
+    let amount = Number(prompt("Kitne Points Lagane Hain?"));
+
+    if(!amount || amount < 1){
+        return;
+    }
+
+    if(amount > balance){
+        alert("Balance Kam Hai");
         return;
     }
 
     balance -= amount;
-    updateBalance();
 
-    bets[selectedNumber] = (bets[selectedNumber] || 0) + amount;
+    if(!bets[number]){
+        bets[number] = 0;
+    }
+
+    bets[number] += amount;
+
+    updateGame();
+}
+
+// Update Screen
+function updateGame(){
+
+    balanceText.innerHTML = balance;
 
     let text = "";
 
-    for (let n in bets) {
-        text += "Number " + n + " = " + bets[n] + " Points\n";
+    for(let num in bets){
+
+        text += "Number " + num + " = " + bets[num] + " Points<br>";
+
+        let pointBox = document.getElementById("point-" + num);
+
+        if(pointBox){
+            pointBox.innerHTML = bets[num];
+        }
+
     }
 
-    betsEl.innerText = text;
+    betsBox.innerHTML = text || "No Bets";
+}
+// Timer
+let timer = setInterval(function () {
 
-    betModal.style.display = "none";
-};
-// ===== VIKTORIX ROULETTE PART 2 =====
-
-function startTimer() {
-
-    const interval = setInterval(() => {
-
-        if (spinning) return;
+    if (bettingOpen) {
 
         time--;
-        timerEl.innerText = time;
+
+        timeText.innerHTML = time;
 
         if (time <= 0) {
 
-            clearInterval(interval);
-
             bettingOpen = false;
-            spinning = true;
+            statusText.innerHTML = "Bet Closed";
 
-            spin();
+            clearInterval(timer);
+
+            setTimeout(function () {
+                spin();
+            }, 1000);
+
         }
 
-    }, 1000);
+    }
 
-}
+}, 1000);
 
-
+// Spin Function
 function spin() {
 
-    resultEl.innerText = "🎡 Spinning...";
+    if (spinning) return;
 
-    setTimeout(() => {
+    if (bettingOpen) {
+        alert("Pehle Bet Time Complete Hone Do");
+        return;
+    }
 
-        const winner = Math.floor(Math.random() * 32);
+    spinning = true;
 
-        resultEl.innerText = "Winner : " + winner;
+    statusText.innerHTML = "🎡 Spinning...";
 
+    let winNumber = Math.floor(Math.random() * 32);
 
-        // Winner number highlight
-        document.querySelectorAll(".number").forEach(box => {
+    setTimeout(function () {
 
-            if (Number(box.innerText) === winner) {
-                box.classList.add("selected");
-            }
-
+        // Purana winner hatao
+        document.querySelectorAll(".number").forEach(btn => {
+            btn.classList.remove("winner");
         });
 
+        // Naya winner highlight
+        let winnerBtn = numbersBox.children[winNumber];
 
-        if (bets[winner]) {
-
-            const win = bets[winner] * 30;
-
-            balance += win;
-            updateBalance();
-
-            alert("🎉 Congratulations!\nYou Win " + win + " Points");
-
-        } else {
-
-            alert("😢 Better Luck Next Time");
-
+        if (winnerBtn) {
+            winnerBtn.classList.add("winner");
         }
 
+        resultText.innerHTML = "Winning Number : " + winNumber;
 
-        bets = {};
-        betsEl.innerText = "No Bets";
-
-
-        setTimeout(() => {
-
-            document.querySelectorAll(".number").forEach(box => {
-                box.classList.remove("selected");
-            });
-
-        },2000);
-
-
-        betModal.style.display = "none";
-
-        time = 15;
-        timerEl.innerText = time;
-
-        bettingOpen = true;
-        spinning = false;
-
-        startTimer();
-
+        checkWin(winNumber);
 
     }, 3000);
 
 }
+// Check Winner
+function checkWin(winNumber){
 
+    if(bets[winNumber]){
 
-startTimer();
+        let winAmount = bets[winNumber] * 2;
+
+        balance += winAmount;
+
+        alert("🎉 Number " + winNumber + " WIN! +" + winAmount + " Points");
+
+    }else{
+
+        alert("😔 Better Luck Next Time");
+
+    }
+
+    updateGame();
+
+    // 2 second baad naya round
+    setTimeout(function(){
+        resetGame();
+    },2000);
+
+}
+
+// New Round Reset
+function resetGame(){
+
+    bets = {};
+
+    time = 60;
+
+    bettingOpen = true;
+
+    spinning = false;
+
+    statusText.innerHTML = "Bet Open";
+
+    resultText.innerHTML = "";
+
+    timeText.innerHTML = time;
+
+    // Winner Highlight Remove
+    document.querySelectorAll(".number").forEach(btn=>{
+        btn.classList.remove("winner");
+    });
+
+    // Sab points 0
+    for(let i=0;i<=31;i++){
+
+        let pointBox=document.getElementById("point-"+i);
+
+        if(pointBox){
+            pointBox.innerHTML="0";
+        }
+
+    }
+
+    betsBox.innerHTML="No Bets";
+
+    updateGame();
+
+    clearInterval(timer);
+
+    timer=setInterval(function(){
+
+        if(bettingOpen){
+
+            time--;
+
+            timeText.innerHTML=time;
+
+            if(time<=0){
+
+                bettingOpen=false;
+
+                statusText.innerHTML="Bet Closed";
+
+                clearInterval(timer);
+
+                setTimeout(function(){
+                    spin();
+                },1000);
+
+            }
+
+        }
+
+    },1000);
+
+}

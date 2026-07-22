@@ -13,7 +13,11 @@
 </head>
 
 <body>
-
+<script>
+if(localStorage.getItem("loggedIn")!=="true"){
+    window.location.href="login.html";
+}
+</script>
 <header>
 
 <h1>🎡 VIKTORIX ROULETTE</h1>
@@ -31,7 +35,25 @@
 
 <div class="timer">
 Bet Time:
-<span id="timer">15</span>
+<span id="timer">60</span>
+</div>
+
+<!-- ROULETTE WHEEL -->
+
+<div class="wheel-area">
+
+<div class="wheel-pointer">
+▼
+</div>
+
+<div id="wheel" class="wheel">
+
+<div class="wheel-center">
+VIKTORIX
+</div>
+
+</div>
+
 </div>
 
 <div id="numbers" class="numbers">
@@ -45,8 +67,8 @@ Bet Time:
 No Bets
 </div>
 
-<button id="spinBtn">
-SPIN
+<button id="spinBtn" disabled>
+AUTO SPIN
 </button>
 
 </div>
