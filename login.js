@@ -1,8 +1,8 @@
 // Register
 function register() {
 
-    const username = document.getElementById("newUsername").value.trim();
-    const password = document.getElementById("newPassword").value.trim();
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
 
     if (!username || !password) {
         alert("Username aur Password bharo");
@@ -16,6 +16,7 @@ function register() {
 
     window.location.href = "login.html";
 }
+
 
 // Login
 function login() {
@@ -41,6 +42,7 @@ function login() {
     }
 
 }
+
 
 // Logout
 function logout() {
