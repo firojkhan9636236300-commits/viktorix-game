@@ -1,29 +1,28 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VIKTORIX Register</title>
 <link rel="stylesheet" href="login.css">
 </head>
+
 <body>
 
 <div class="login-box">
 
-<h1>🎮 VIKTORIX</h1>
+<h1>VIKTORIX</h1>
+<h2>Create Account</h2>
 
-<h2>Register</h2>
+<input type="text" id="username" placeholder="Enter Username">
 
-<input type="text" id="newUsername" placeholder="Username">
+<input type="password" id="password" placeholder="Enter Password">
 
-<input type="password" id="newPassword" placeholder="Password">
+<button onclick="register()">Register</button>
 
-<button onclick="register()">Create Account</button>
+<p id="message"></p>
 
-<p>
-Already have an account?
-<a href="login.html">Login</a>
-</p>
+<a href="login.html">Already have account? Login</a>
 
 </div>
 
