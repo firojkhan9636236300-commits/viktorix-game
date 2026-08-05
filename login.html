@@ -3,31 +3,34 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>VIKTORIX Login</title>
-<link rel="stylesheet" href="login.css">
+
 </head>
 <body>
-
-<div class="login-box">
 
 <h1>🎮 VIKTORIX</h1>
 
 <h2>Login</h2>
 
-<input type="text" id="username" placeholder="Username">
+<input id="username" type="text" placeholder="Username">
 
-<input type="password" id="password" placeholder="Password">
+<br><br>
+
+<input id="password" type="password" placeholder="Password">
+
+<br><br>
 
 <button onclick="login()">Login</button>
 
+<br><br>
+
 <p>
-Don't have an account?
+New player?
 <a href="register.html">Register</a>
 </p>
 
-</div>
-
-<script src="login.js"></script>
+<script type="module" src="auth.js"></script>
 
 </body>
 </html>

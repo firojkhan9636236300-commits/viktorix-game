@@ -3,52 +3,56 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>VIKTORIX</title>
-<link rel="stylesheet" href="style.css">
+
 </head>
+
 <body>
 
-<script>
-if(localStorage.getItem("loggedIn")!=="true"){
-    window.location.href="login.html";
-}
-</script>
-
-<header>
 <h1>🎮 VIKTORIX</h1>
 
-<nav>
-<a href="index.html">Home</a>
-<a href="roulette.html">Roulette</a>
+<h2>Welcome Player</h2>
+
+<p id="userInfo"></p>
+
 <button onclick="logout()">Logout</button>
-</nav>
 
-</header>
 
-<section class="hero">
+<script type="module">
 
-<h2>
-Welcome
-<span id="userName"></span>
-</h2>
+import { auth } from "./firebase.js";
 
-<p>Play exciting games and enjoy the experience.</p>
+import {
+ signOut,
+ onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
-<a href="roulette.html" class="play-btn">
-Play Roulette
-</a>
 
-</section>
+onAuthStateChanged(auth, (user)=>{
 
-<footer>
-<p>© 2026 VIKTORIX. All Rights Reserved.</p>
-</footer>
+ if(user){
 
-<script src="login.js"></script>
+   document.getElementById("userInfo").innerHTML =
+   "Player ID: " + user.email;
 
-<script>
-document.getElementById("userName").innerHTML =
-localStorage.getItem("viktorixUser");
+ }else{
+
+   window.location.href="login.html";
+
+ }
+
+});
+
+
+window.logout = function(){
+
+ signOut(auth);
+
+ window.location.href="login.html";
+
+}
+
 </script>
 
 </body>

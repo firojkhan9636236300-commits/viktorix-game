@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>VIKTORIX Admin Panel</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,sans-serif;
+}
+
+body{
+    background:#03152f;
+    color:white;
+    text-align:center;
+    padding:20px;
+}
+
+h1{
+    color:#00bfff;
+    margin-bottom:10px;
+}
+
+#adminName{
+    margin-bottom:20px;
+}
+
+#users{
+    width:100%;
+    max-width:500px;
+    margin:auto;
+}
+
+.user-card{
+    background:#05224d;
+    border:1px solid #00bfff;
+    border-radius:10px;
+    padding:15px;
+    margin-bottom:20px;
+    text-align:left;
+}
+
+.user-card p{
+    margin:8px 0;
+}
+
+button{
+    border:none;
+    border-radius:5px;
+    padding:10px 15px;
+    margin:5px;
+    font-size:15px;
+    cursor:pointer;
+}
+
+.approve{
+    background:green;
+    color:white;
+}
+
+.add{
+    background:#0099ff;
+    color:white;
+}
+
+.remove{
+    background:red;
+    color:white;
+}
+
+.logout{
+    background:#ff9900;
+    color:white;
+    margin-top:20px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>🎮 VIKTORIX ADMIN PANEL</h1>
+
+<h3 id="adminName">Welcome Admin</h3>
+
+<div id="users">
+Loading Users...
+</div>
+
+<button class="logout" onclick="logout()">
+Logout
+</button>
+
+<script type="module" src="admin.js"></script>
+
+</body>
+</html>
