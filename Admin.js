@@ -1,4 +1,4 @@
-// admin.js
+// Admin.js
 
 import { auth, db } from "./firebase.js";
 
@@ -17,10 +17,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 
-let currentAdmin = null;
-
-
-// Admin Check
+// ===============================
+// ADMIN LOGIN CHECK
+// ===============================
 
 onAuthStateChanged(auth, async (user) => {
 
@@ -29,218 +28,236 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-
   try {
 
+    // Current logged-in user ka Firestore document
     const adminRef = doc(db, "Users", user.uid);
     const adminSnap = await getDoc(adminRef);
 
-
     if (!adminSnap.exists()) {
-
-      alert("Access Denied");
-      window.location.href = "index.html";
+      alert("Admin account not found");
+      await signOut(auth);
+      window.location.href = "login.html";
       return;
-
     }
 
+    const adminData = adminSnap.data();
 
-    currentAdmin = adminSnap.data();
-
-
-    if (currentAdmin.role !== "admin") {
-
+    // Admin check
+    if (adminData.role !== "admin") {
       alert("Only Admin Allowed");
-      window.location.href = "index.html";
+      await signOut(auth);
+      window.location.href = "login.html";
       return;
-
     }
 
-
+    // Admin name
     document.getElementById("adminName").innerText =
-    "Welcome " + currentAdmin.username;
+      "Welcome " + (adminData.username || "Admin");
 
+    // Users load karo
+    await loadUsers();
 
-    loadUsers();
+  } catch (error) {
 
+    console.error("Admin Error:", error);
 
-  } catch(error){
-
-    console.log(error);
+    document.getElementById("users").innerHTML =
+      "<p>Users load nahi ho pa rahe.</p>" +
+      "<p style='color:#ff5555;'>Error: " +
+      error.message +
+      "</p>";
 
   }
 
-
 });
 
 
+// ===============================
+// LOAD USERS
+// ===============================
+
+async function loadUsers() {
+
+  const usersBox = document.getElementById("users");
+
+  usersBox.innerHTML = "<p>Loading Users...</p>";
+
+  try {
+
+    const usersRef = collection(db, "Users");
+    const snapshot = await getDocs(usersRef);
+
+    usersBox.innerHTML = "";
+
+    let userFound = false;
+
+    snapshot.forEach((item) => {
+
+      const user = item.data();
+
+      // Admin ko users list me mat dikhao
+      if (user.role === "admin") {
+        return;
+      }
+
+      userFound = true;
+
+      const card = document.createElement("div");
+      card.className = "user-card";
+
+      card.innerHTML = `
+        <h3>${user.username || "No Name"}</h3>
+
+        <p>
+          Points: ${user.points || 0}
+        </p>
+
+        <p>
+          Approved:
+          ${user.approved === true ? "YES" : "NO"}
+        </p>
+
+        <button class="add">
+          + Points
+        </button>
+
+        <button class="remove">
+          - Points
+        </button>
+
+        <button class="approve">
+          Approve
+        </button>
+      `;
+
+      // Add Points
+      card.querySelector(".add").onclick = async () => {
+
+        const amount = prompt("Kitne points add karne hain?");
+
+        if (!amount) return;
+
+        const number = Number(amount);
+
+        if (!Number.isFinite(number) || number <= 0) {
+          alert("Sahi points amount enter karo");
+          return;
+        }
+
+        try {
+
+          await updateDoc(doc(db, "Users", item.id), {
+            points: increment(number)
+          });
+
+          alert("Points Added");
+          await loadUsers();
+
+        } catch (error) {
+
+          alert("Points add nahi hue: " + error.message);
+
+        }
+
+      };
 
 
+      // Remove Points
+      card.querySelector(".remove").onclick = async () => {
 
-// Load All Users
+        const amount = prompt("Kitne points remove karne hain?");
 
-async function loadUsers(){
+        if (!amount) return;
 
+        const number = Number(amount);
 
-const usersBox = document.getElementById("users");
+        if (!Number.isFinite(number) || number <= 0) {
+          alert("Sahi points amount enter karo");
+          return;
+        }
 
+        try {
 
-usersBox.innerHTML="";
+          await updateDoc(doc(db, "Users", item.id), {
+            points: increment(-number)
+          });
 
+          alert("Points Removed");
+          await loadUsers();
 
-const snap = await getDocs(collection(db,"Users"));
+        } catch (error) {
 
+          alert("Points remove nahi hue: " + error.message);
 
+        }
 
-snap.forEach((item)=>{
-
-
-const user = item.data();
-
-
-if(user.role === "admin") return;
-
-
-
-usersBox.innerHTML += `
-
-
-<div class="userCard">
-
-
-<h3>${user.username || "No Name"}</h3>
+      };
 
 
-<p>Points : ${user.points || 0}</p>
+      // Approve User
+      card.querySelector(".approve").onclick = async () => {
+
+        try {
+
+          await updateDoc(doc(db, "Users", item.id), {
+            approved: true
+          });
+
+          alert("User Approved");
+          await loadUsers();
+
+        } catch (error) {
+
+          alert("User approve nahi hua: " + error.message);
+
+        }
+
+      };
 
 
-<p>
-Approved :
-${user.approved ? "YES":"NO"}
-</p>
+      usersBox.appendChild(card);
+
+    });
 
 
+    if (!userFound) {
 
-<button onclick="addPoints('${item.id}')">
-+ Points
-</button>
+      usersBox.innerHTML =
+        "<p>Abhi koi player user nahi hai.</p>";
 
+    }
 
-<button onclick="removePoints('${item.id}')">
-- Points
-</button>
+  } catch (error) {
 
+    console.error("Load Users Error:", error);
 
-<button onclick="approveUser('${item.id}')">
-Approve
-</button>
+    usersBox.innerHTML =
+      "<p style='color:#ff5555;'>Users load nahi ho pa rahe.</p>" +
+      "<p style='font-size:13px;'>" +
+      error.message +
+      "</p>";
 
-
-</div>
-
-
-`;
-
-
-});
-
+  }
 
 }
 
 
+// ===============================
+// LOGOUT
+// ===============================
 
+document.getElementById("logout").addEventListener("click", async () => {
 
+  try {
 
-// Add Points
+    await signOut(auth);
+    window.location.href = "login.html";
 
-window.addPoints = async(id)=>{
+  } catch (error) {
 
+    alert("Logout error: " + error.message);
 
-let amount = prompt("Points add karo");
-
-
-if(!amount) return;
-
-
-await updateDoc(doc(db,"Users",id),{
-
-points: increment(Number(amount))
-
-});
-
-
-alert("Points Added");
-
-
-loadUsers();
-
-
-};
-
-
-
-
-
-// Remove Points
-
-window.removePoints = async(id)=>{
-
-
-let amount = prompt("Points remove karo");
-
-
-if(!amount) return;
-
-
-await updateDoc(doc(db,"Users",id),{
-
-points: increment(-Number(amount))
+  }
 
 });
-
-
-alert("Points Removed");
-
-
-loadUsers();
-
-
-};
-
-
-
-
-
-// Approve User
-
-window.approveUser = async(id)=>{
-
-
-await updateDoc(doc(db,"Users",id),{
-
-approved:true
-
-});
-
-
-alert("User Approved");
-
-
-loadUsers();
-
-
-};
-
-
-
-
-
-// Logout
-
-document.getElementById("logout").onclick = ()=>{
-
-
-signOut(auth);
-
-
-};
