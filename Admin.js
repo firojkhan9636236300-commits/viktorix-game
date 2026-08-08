@@ -18,10 +18,12 @@ import {
 
 
 // ===============================
-// ADMIN LOGIN CHECK
+// AUTH + ADMIN CHECK
 // ===============================
 
 onAuthStateChanged(auth, async (user) => {
+
+  const usersBox = document.getElementById("users");
 
   if (!user) {
     window.location.href = "login.html";
@@ -30,43 +32,71 @@ onAuthStateChanged(auth, async (user) => {
 
   try {
 
-    // Current logged-in user ka Firestore document
-    const adminRef = doc(db, "Users", user.uid);
+    // STEP 1: Logged-in Firebase UID
+    const uid = user.uid;
+
+    // STEP 2: Admin document
+    const adminRef = doc(db, "Users", uid);
     const adminSnap = await getDoc(adminRef);
 
+    // Diagnostic information
     if (!adminSnap.exists()) {
-      alert("Admin account not found");
-      await signOut(auth);
-      window.location.href = "login.html";
+
+      usersBox.innerHTML = `
+        <div style="background:#5a1111;padding:15px;border-radius:10px;">
+          <h3>Admin account not found</h3>
+          <p>Login UID:</p>
+          <p style="word-break:break-all;">${uid}</p>
+          <p>Firestore path:</p>
+          <p style="word-break:break-all;">
+            Users/${uid}
+          </p>
+        </div>
+      `;
+
+      console.error("ADMIN DOCUMENT NOT FOUND");
+      console.error("UID:", uid);
+
       return;
     }
 
     const adminData = adminSnap.data();
 
-    // Admin check
+    // STEP 3: Role check
     if (adminData.role !== "admin") {
-      alert("Only Admin Allowed");
-      await signOut(auth);
-      window.location.href = "login.html";
+
+      usersBox.innerHTML = `
+        <p style="color:#ff5555;">
+          Admin role missing.
+        </p>
+        <p>
+          Current role:
+          ${adminData.role || "not found"}
+        </p>
+      `;
+
       return;
     }
 
-    // Admin name
+    // STEP 4: Show admin name
     document.getElementById("adminName").innerText =
       "Welcome " + (adminData.username || "Admin");
 
-    // Users load karo
+    // STEP 5: Load users
     await loadUsers();
 
   } catch (error) {
 
-    console.error("Admin Error:", error);
+    console.error("ADMIN ERROR:", error);
 
-    document.getElementById("users").innerHTML =
-      "<p>Users load nahi ho pa rahe.</p>" +
-      "<p style='color:#ff5555;'>Error: " +
-      error.message +
-      "</p>";
+    usersBox.innerHTML = `
+      <div style="background:#5a1111;padding:15px;border-radius:10px;">
+        <h3>Firebase Error</h3>
+        <p style="word-break:break-word;">
+          ${error.message}
+        </p>
+      </div>
+    `;
 
   }
 
@@ -85,25 +115,27 @@ async function loadUsers() {
 
   try {
 
-    const usersRef = collection(db, "Users");
-    const snapshot = await getDocs(usersRef);
+    const snapshot = await getDocs(
+      collection(db, "Users")
+    );
 
     usersBox.innerHTML = "";
 
-    let userFound = false;
+    let playerFound = false;
 
     snapshot.forEach((item) => {
 
       const user = item.data();
 
-      // Admin ko users list me mat dikhao
+      // Admin ko player list me nahi dikhana
       if (user.role === "admin") {
         return;
       }
 
-      userFound = true;
+      playerFound = true;
 
       const card = document.createElement("div");
+
       card.className = "user-card";
 
       card.innerHTML = `
@@ -131,10 +163,13 @@ async function loadUsers() {
         </button>
       `;
 
-      // Add Points
+
+      // + POINTS
       card.querySelector(".add").onclick = async () => {
 
-        const amount = prompt("Kitne points add karne hain?");
+        const amount = prompt(
+          "Kitne points add karne hain?"
+        );
 
         if (!amount) return;
 
@@ -147,26 +182,35 @@ async function loadUsers() {
 
         try {
 
-          await updateDoc(doc(db, "Users", item.id), {
-            points: increment(number)
-          });
+          await updateDoc(
+            doc(db, "Users", item.id),
+            {
+              points: increment(number)
+            }
+          );
 
           alert("Points Added");
+
           await loadUsers();
 
         } catch (error) {
 
-          alert("Points add nahi hue: " + error.message);
+          alert(
+            "Points add nahi hue: " +
+            error.message
+          );
 
         }
 
       };
 
 
-      // Remove Points
+      // - POINTS
       card.querySelector(".remove").onclick = async () => {
 
-        const amount = prompt("Kitne points remove karne hain?");
+        const amount = prompt(
+          "Kitne points remove karne hain?"
+        );
 
         if (!amount) return;
 
@@ -179,37 +223,51 @@ async function loadUsers() {
 
         try {
 
-          await updateDoc(doc(db, "Users", item.id), {
-            points: increment(-number)
-          });
+          await updateDoc(
+            doc(db, "Users", item.id),
+            {
+              points: increment(-number)
+            }
+          );
 
           alert("Points Removed");
+
           await loadUsers();
 
         } catch (error) {
 
-          alert("Points remove nahi hue: " + error.message);
+          alert(
+            "Points remove nahi hue: " +
+            error.message
+          );
 
         }
 
       };
 
 
-      // Approve User
+      // APPROVE
       card.querySelector(".approve").onclick = async () => {
 
         try {
 
-          await updateDoc(doc(db, "Users", item.id), {
-            approved: true
-          });
+          await updateDoc(
+            doc(db, "Users", item.id),
+            {
+              approved: true
+            }
+          );
 
           alert("User Approved");
+
           await loadUsers();
 
         } catch (error) {
 
-          alert("User approve nahi hua: " + error.message);
+          alert(
+            "User approve nahi hua: " +
+            error.message
+          );
 
         }
 
@@ -221,22 +279,31 @@ async function loadUsers() {
     });
 
 
-    if (!userFound) {
+    if (!playerFound) {
 
-      usersBox.innerHTML =
-        "<p>Abhi koi player user nahi hai.</p>";
+      usersBox.innerHTML = `
+        <p>
+          Abhi koi player user nahi hai.
+        </p>
+      `;
 
     }
 
   } catch (error) {
 
-    console.error("Load Users Error:", error);
+    console.error(
+      "LOAD USERS ERROR:",
+      error
+    );
 
-    usersBox.innerHTML =
-      "<p style='color:#ff5555;'>Users load nahi ho pa rahe.</p>" +
-      "<p style='font-size:13px;'>" +
-      error.message +
-      "</p>";
+    usersBox.innerHTML = `
+      <div style="background:#5a1111;padding:15px;border-radius:10px;">
+        <h3>Users load error</h3>
+        <p style="word-break:break-word;">
+          ${error.message}
+        </p>
+      </div>
+    `;
 
   }
 
@@ -247,17 +314,23 @@ async function loadUsers() {
 // LOGOUT
 // ===============================
 
-document.getElementById("logout").addEventListener("click", async () => {
+document
+  .getElementById("logout")
+  .addEventListener("click", async () => {
 
-  try {
+    try {
 
-    await signOut(auth);
-    window.location.href = "login.html";
+      await signOut(auth);
 
-  } catch (error) {
+      window.location.href = "login.html";
 
-    alert("Logout error: " + error.message);
+    } catch (error) {
 
-  }
+      alert(
+        "Logout error: " +
+        error.message
+      );
 
-});
+    }
+
+  });
