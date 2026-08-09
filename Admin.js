@@ -1,4 +1,4 @@
-// Admin.js - Diagnostic Version
+// Admin.js - VIKTORIX ADMIN PANEL
 
 import { auth, db } from "./firebase.js";
 
@@ -9,113 +9,185 @@ import {
 
 import {
   collection,
-  getDocs
+  getDocs,
+  doc,
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 
-onAuthStateChanged(auth, async (user) => {
+// 🔐 YOUR ADMIN UID
+const ADMIN_UID = "HXasVB2rOEPsd8kRc39lAedzlbg1";
 
-  const usersBox = document.getElementById("users");
+
+const usersBox = document.getElementById("users");
+const adminName = document.getElementById("adminName");
+
+
+// ===============================
+// CHECK ADMIN LOGIN
+// ===============================
+
+onAuthStateChanged(auth, async (user) => {
 
   if (!user) {
     window.location.href = "login.html";
     return;
   }
 
+  // UID check
+  if (user.uid !== ADMIN_UID) {
+
+    alert("Access Denied - Admin Only");
+
+    await signOut(auth);
+
+    window.location.href = "login.html";
+
+    return;
+  }
+
+
+  adminName.innerText =
+    "Welcome Admin 👑";
+
+
+  loadUsers();
+
+});
+
+
+// ===============================
+// LOAD USERS
+// ===============================
+
+async function loadUsers() {
+
+  usersBox.innerHTML = "Loading Users...";
+
   try {
 
-    const uid = user.uid;
-
-    // Firestore Users collection ke saare documents read karo
     const snapshot = await getDocs(
       collection(db, "Users")
     );
 
-    let html = `
-      <div style="
-        background:#05224d;
-        padding:15px;
-        border-radius:10px;
-        text-align:left;
-      ">
-
-      <h3 style="color:#00bfff;">
-        Firebase Check
-      </h3>
-
-      <p>
-        Login UID:
-      </p>
-
-      <p style="word-break:break-all;">
-        ${uid}
-      </p>
-
-      <hr>
-
-      <p>
-        Firestore Users Documents:
-      </p>
-    `;
 
     if (snapshot.empty) {
 
+      usersBox.innerHTML =
+        "<p>No users found.</p>";
+
+      return;
+    }
+
+
+    let html = "";
+
+
+    snapshot.forEach((item) => {
+
+      const data = item.data();
+
+      const username =
+        data.username || "No username";
+
+      const role =
+        data.role || "user";
+
+      const approved =
+        data.approved === true;
+
+      const points =
+        data.points ?? 0;
+
+
+      // Admin ko list me alag dikhayenge
+      const isAdmin =
+        item.id === ADMIN_UID ||
+        role === "admin";
+
+
       html += `
-        <p style="color:#ff5555;">
-          Users collection EMPTY hai.
-        </p>
-      `;
 
-    } else {
+        <div class="user-card">
 
-      snapshot.forEach((item) => {
-
-        const data = item.data();
-
-        html += `
-          <hr>
+          <h3 style="color:#00bfff;">
+            ${isAdmin ? "👑 ADMIN" : "👤 USER"}
+          </h3>
 
           <p>
-            <b>Document ID:</b>
+            <b>Username:</b>
+            ${username}
           </p>
 
           <p style="word-break:break-all;">
+            <b>UID:</b>
             ${item.id}
           </p>
 
           <p>
-            <b>Username:</b>
-            ${data.username || "No username"}
-          </p>
-
-          <p>
             <b>Role:</b>
-            ${data.role || "No role"}
+            ${role}
           </p>
 
           <p>
             <b>Approved:</b>
-            ${data.approved === true ? "true" : "false"}
+            ${approved ? "✅ Yes" : "❌ No"}
           </p>
 
           <p>
             <b>Points:</b>
-            ${data.points ?? 0}
+            ${points}
           </p>
-        `;
 
-      });
 
-    }
+          ${
+            !isAdmin
+            ?
+            `
 
-    html += `
-      </div>
-    `;
+            <button
+              class="approve"
+              onclick="approveUser('${item.id}', ${approved})"
+            >
+              ${approved ? "Approved ✅" : "Approve User"}
+            </button>
+
+
+            <br>
+
+
+            <button
+              class="add"
+              onclick="addPoints('${item.id}', '${username}')"
+            >
+              ➕ Add Points
+            </button>
+
+
+            <button
+              class="remove"
+              onclick="removePoints('${item.id}', '${username}', ${points})"
+            >
+              ➖ Remove Points
+            </button>
+
+            `
+            :
+            `
+            <p style="color:#00ff88;">
+              👑 Main Administrator
+            </p>
+            `
+          }
+
+        </div>
+
+      `;
+
+    });
+
 
     usersBox.innerHTML = html;
-
-    document.getElementById("adminName").innerText =
-      "Welcome Admin";
 
 
   } catch (error) {
@@ -123,11 +195,11 @@ onAuthStateChanged(auth, async (user) => {
     console.error(error);
 
     usersBox.innerHTML = `
+
       <div style="
         background:#5a1111;
         padding:15px;
         border-radius:10px;
-        text-align:left;
       ">
 
         <h3>Firebase Error</h3>
@@ -137,22 +209,244 @@ onAuthStateChanged(auth, async (user) => {
         </p>
 
       </div>
+
     `;
 
   }
 
-});
+}
 
 
-// Logout
+// ===============================
+// APPROVE USER
+// ===============================
 
-document.getElementById("logout").addEventListener(
-  "click",
-  async () => {
+window.approveUser = async function(uid, alreadyApproved) {
 
-    await signOut(auth);
+  if (alreadyApproved) {
 
-    window.location.href = "login.html";
+    alert("User already approved.");
+
+    return;
+  }
+
+
+  try {
+
+    await updateDoc(
+      doc(db, "Users", uid),
+      {
+        approved: true
+      }
+    );
+
+
+    alert("User approved successfully ✅");
+
+
+    loadUsers();
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "Approve failed: " +
+      error.message
+    );
 
   }
-);
+
+};
+
+
+// ===============================
+// ADD POINTS
+// ===============================
+
+window.addPoints = async function(uid, username) {
+
+  const amount =
+    prompt(
+      "Kitne points add karne hain?\n\nUser: " +
+      username
+    );
+
+
+  if (amount === null) return;
+
+
+  const pointsToAdd =
+    Number(amount);
+
+
+  if (
+    !Number.isFinite(pointsToAdd) ||
+    pointsToAdd <= 0
+  ) {
+
+    alert("Valid points amount enter karo.");
+
+    return;
+  }
+
+
+  try {
+
+    const userRef =
+      doc(db, "Users", uid);
+
+
+    const snapshot =
+      await getDocs(
+        collection(db, "Users")
+      );
+
+
+    let currentPoints = 0;
+
+
+    snapshot.forEach((item) => {
+
+      if (item.id === uid) {
+
+        currentPoints =
+          Number(item.data().points || 0);
+
+      }
+
+    });
+
+
+    await updateDoc(
+      userRef,
+      {
+        points:
+          currentPoints + pointsToAdd
+      }
+    );
+
+
+    alert(
+      pointsToAdd +
+      " points successfully added ✅"
+    );
+
+
+    loadUsers();
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "Points add failed: " +
+      error.message
+    );
+
+  }
+
+};
+
+
+// ===============================
+// REMOVE POINTS
+// ===============================
+
+window.removePoints = async function(
+  uid,
+  username,
+  currentPoints
+) {
+
+  const amount =
+    prompt(
+      "Kitne points remove karne hain?\n\nUser: " +
+      username +
+      "\nCurrent Points: " +
+      currentPoints
+    );
+
+
+  if (amount === null) return;
+
+
+  const pointsToRemove =
+    Number(amount);
+
+
+  if (
+    !Number.isFinite(pointsToRemove) ||
+    pointsToRemove <= 0
+  ) {
+
+    alert("Valid points amount enter karo.");
+
+    return;
+  }
+
+
+  if (pointsToRemove > currentPoints) {
+
+    alert(
+      "User ke paas itne points nahi hain."
+    );
+
+    return;
+  }
+
+
+  try {
+
+    await updateDoc(
+      doc(db, "Users", uid),
+      {
+        points:
+          Number(currentPoints) -
+          pointsToRemove
+      }
+    );
+
+
+    alert(
+      pointsToRemove +
+      " points successfully removed ✅"
+    );
+
+
+    loadUsers();
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "Points remove failed: " +
+      error.message
+    );
+
+  }
+
+};
+
+
+// ===============================
+// LOGOUT
+// ===============================
+
+document
+  .getElementById("logout")
+  .addEventListener(
+    "click",
+    async () => {
+
+      await signOut(auth);
+
+      window.location.href =
+        "login.html";
+
+    }
+  );
