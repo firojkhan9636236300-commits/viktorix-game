@@ -149,26 +149,34 @@ async function login() {
             email,
             password
         );
+const uid = result.user.uid;
 
-        const uid = result.user.uid;
+console.log("Firebase Auth UID:", uid);
 
-        // User document
-        const userRef = doc(db, "Users", uid);
-        const userDoc = await getDoc(userRef);
+// User document
+const userRef = doc(db, "Users", uid);
+const userDoc = await getDoc(userRef);
 
-        if (!userDoc.exists()) {
+console.log("Firestore document exists:", userDoc.exists());
 
-            await signOut(auth);
+if (!userDoc.exists()) {
 
-            message.textContent =
-                "User data nahi mila.";
+    await signOut(auth);
 
-            loginBtn.disabled = false;
-            loginBtn.textContent = "Login";
-            return;
-        }
+    message.textContent =
+        "User data nahi mila. UID: " + uid;
 
-        const data = userDoc.data();
+    loginBtn.disabled = false;
+    loginBtn.textContent = "Login";
+    return;
+}
+
+const data = userDoc.data();
+
+console.log("Firestore User Data:", data);
+        
+
+       
 
         // Admin
         if (
