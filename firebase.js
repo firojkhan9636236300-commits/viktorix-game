@@ -10,8 +10,8 @@ const firebaseConfig = {
   projectId: "viktorix-game",
   storageBucket: "viktorix-game.firebasestorage.app",
   messagingSenderId: "286513890572",
-  appId: "1:286513890572:web:f5b8dae4f2d0cfefd3b529",
-  measurementId: "G-D6G6SPPTNV"
+  appId: "1:286513890572:web:10e1b7e32097d053d3b529",
+  measurementId: "G-SJLT046SYT"
 };
 
 const app = initializeApp(firebaseConfig);
