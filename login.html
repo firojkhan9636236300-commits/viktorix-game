@@ -156,7 +156,10 @@ console.log("Firebase Auth UID:", uid);
 // User document
 const userRef = doc(db, "Users", uid);
 const userDoc = await getDoc(userRef);
-
+console.log("UID:", uid);
+console.log("Document path:", userRef.path);
+console.log("Document exists:", userDoc.exists());
+console.log("Document data:", userDoc.data());
 console.log("Firestore document exists:", userDoc.exists());
 
 if (!userDoc.exists()) {
