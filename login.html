@@ -53,6 +53,10 @@ button {
     font-weight: bold;
 }
 
+button:disabled {
+    opacity: 0.6;
+}
+
 a {
     color: #00bfff;
     text-decoration: none;
@@ -75,14 +79,16 @@ a {
 
 <input
     id="username"
-    type="text"
-    placeholder="Username"
+    type="email"
+    placeholder="Email"
+    autocomplete="email"
 >
 
 <input
     id="password"
     type="password"
     placeholder="Password"
+    autocomplete="current-password"
 >
 
 <button id="loginBtn">Login</button>
@@ -101,14 +107,13 @@ New player?
 import { auth, db } from "./firebase.js";
 
 import {
-    signInWithEmailAndPassword
+    signInWithEmailAndPassword,
+    signOut
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
 import {
-    collection,
-    query,
-    where,
-    getDocs
+    doc,
+    getDoc
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 
@@ -123,12 +128,12 @@ loginBtn.addEventListener("click", login);
 
 async function login() {
 
-    const username = usernameInput.value.trim();
+    const email = usernameInput.value.trim();
     const password = passwordInput.value;
 
-    if (!username || !password) {
+    if (!email || !password) {
         message.textContent =
-            "Username aur password dono bharo.";
+            "Email aur password dono bharo.";
         return;
     }
 
@@ -138,86 +143,75 @@ async function login() {
 
     try {
 
-        const usersRef = collection(db, "Users");
-
-        const q = query(
-            usersRef,
-            where("username", "==", username)
+        // Firebase Authentication login
+        const result = await signInWithEmailAndPassword(
+            auth,
+            email,
+            password
         );
 
-        const snapshot = await getDocs(q);
+        const uid = result.user.uid;
 
-        if (snapshot.empty) {
-            message.textContent = "Username nahi mila.";
+        // User document
+        const userRef = doc(db, "Users", uid);
+        const userDoc = await getDoc(userRef);
 
-            loginBtn.disabled = false;
-            loginBtn.textContent = "Login";
-            return;
-        }
+        if (!userDoc.exists()) {
 
-        const userDoc = snapshot.docs[0];
-        const userData = userDoc.data();
-
-        const email = userData.email;
-
-        if (!email) {
-            message.textContent =
-                "Account me email missing hai.";
-
-            loginBtn.disabled = false;
-            loginBtn.textContent = "Login";
-            return;
-        }
-
-        const credential =
-            await signInWithEmailAndPassword(
-                auth,
-                email,
-                password
-            );
-
-        const loggedInUid = credential.user.uid;
-
-        if (loggedInUid !== userDoc.id) {
-
-            await auth.signOut();
+            await signOut(auth);
 
             message.textContent =
-                "Account verification failed.";
+                "User data nahi mila.";
 
             loginBtn.disabled = false;
             loginBtn.textContent = "Login";
             return;
         }
 
-        if (userData.approved !== true) {
+        const data = userDoc.data();
 
-            await auth.signOut();
+        // Admin
+        if (
+            data.role === "admin" &&
+            data.approved === true
+        ) {
 
             message.textContent =
-                "Aapka account abhi Admin ne approve nahi kiya.";
+                "Admin login successful!";
 
-            loginBtn.disabled = false;
-            loginBtn.textContent = "Login";
+            window.location.href = "admin.html";
             return;
         }
+
+        // Approved User
+        if (
+            data.role === "user" &&
+            data.approved === true
+        ) {
+
+            message.textContent =
+                "Login successful!";
+
+            window.location.href = "index.html";
+            return;
+        }
+
+        // Approval pending
+        await signOut(auth);
 
         message.textContent =
-            "Login successful!";
-
-        window.location.href =
-            "dashboard.html";
+            "Aapka account abhi Admin ne approve nahi kiya.";
 
     } catch (error) {
 
         console.error(error);
 
         if (
-            error.code === "auth/wrong-password" ||
-            error.code === "auth/invalid-credential"
+            error.code === "auth/invalid-credential" ||
+            error.code === "auth/wrong-password"
         ) {
             message.textContent =
-                "Password galat hai.";
+                "Email ya password galat hai.";
         }
         else if (
             error.code === "auth/user-not-found"
@@ -227,12 +221,13 @@ async function login() {
         }
         else {
             message.textContent =
-                "Login failed. Firebase settings check karo.";
+                error.message;
         }
 
-        loginBtn.disabled = false;
-        loginBtn.textContent = "Login";
     }
+
+    loginBtn.disabled = false;
+    loginBtn.textContent = "Login";
 }
 
 </script>
