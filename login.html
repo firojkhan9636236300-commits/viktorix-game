@@ -100,6 +100,7 @@ button:disabled {
     <h1>VIKTORIX</h1>
 
     <label for="username">Email</label>
+
     <input
         type="email"
         id="username"
@@ -108,6 +109,7 @@ button:disabled {
     >
 
     <label for="password">Password</label>
+
     <input
         type="password"
         id="password"
@@ -127,7 +129,29 @@ button:disabled {
 
 </div>
 
+
 <script type="module">
+
+/* =====================================================
+   FIREBASE
+===================================================== */
+
+import { auth, db } from "./firebase.js";
+
+import {
+    signInWithEmailAndPassword,
+    signOut
+} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+
+import {
+    doc,
+    getDoc
+} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+
+/* =====================================================
+   HTML ELEMENTS
+===================================================== */
 
 const message = document.getElementById("message");
 const loginBtn = document.getElementById("loginBtn");
@@ -135,106 +159,45 @@ const usernameInput = document.getElementById("username");
 const passwordInput = document.getElementById("password");
 
 
-// --------------------------------------------------
-// Firebase load
-// --------------------------------------------------
+/* =====================================================
+   CHECK FIREBASE
+===================================================== */
 
-let auth;
-let db;
+console.log("VIKTORIX Login started");
+console.log("Auth:", auth);
+console.log("Firestore:", db);
 
-try {
-
-    message.textContent = "Firebase loading...";
-
-    const firebaseModule = await import("./firebase.js");
-
-    auth = firebaseModule.auth;
-    db = firebaseModule.db;
-
-    if (!auth || !db) {
-        throw new Error(
-            "firebase.js se auth ya db load nahi hua."
-        );
-    }
-
-    message.textContent = "";
-
-    console.log("Firebase successfully loaded.");
-
-} catch (error) {
-
-    console.error("Firebase Load Error:", error);
-
-    message.textContent =
-        "Firebase load nahi hua: " + error.message;
+if (!auth || !db) {
 
     message.style.color = "#ff5252";
+
+    message.textContent =
+        "Firebase connect nahi hua.";
 
     loginBtn.disabled = true;
 }
 
 
-// --------------------------------------------------
-// Firebase modules
-// --------------------------------------------------
-
-let signInWithEmailAndPassword;
-let signOut;
-let doc;
-let getDoc;
-
-try {
-
-    if (auth && db) {
-
-        const authModule = await import(
-            "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js"
-        );
-
-        const firestoreModule = await import(
-            "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js"
-        );
-
-        signInWithEmailAndPassword =
-            authModule.signInWithEmailAndPassword;
-
-        signOut =
-            authModule.signOut;
-
-        doc =
-            firestoreModule.doc;
-
-        getDoc =
-            firestoreModule.getDoc;
-
-        console.log("Firebase Auth and Firestore loaded.");
-
-    }
-
-} catch (error) {
-
-    console.error("Firebase SDK Error:", error);
-
-    message.textContent =
-        "Firebase SDK error: " + error.message;
-
-    message.style.color = "#ff5252";
-
-    loginBtn.disabled = true;
-}
-
-
-// --------------------------------------------------
-// Login
-// --------------------------------------------------
+/* =====================================================
+   LOGIN BUTTON
+===================================================== */
 
 loginBtn.addEventListener("click", login);
 
+
+/* =====================================================
+   LOGIN FUNCTION
+===================================================== */
 
 async function login() {
 
     const email = usernameInput.value.trim();
     const password = passwordInput.value;
+
+
+    /* -----------------------------------------------
+       EMPTY CHECK
+    ----------------------------------------------- */
 
     if (!email || !password) {
 
@@ -246,15 +209,10 @@ async function login() {
         return;
     }
 
-    if (!auth || !db) {
 
-        message.style.color = "#ff5252";
-
-        message.textContent =
-            "Firebase connect nahi hai.";
-
-        return;
-    }
+    /* -----------------------------------------------
+       BUTTON LOCK
+    ----------------------------------------------- */
 
     loginBtn.disabled = true;
     loginBtn.textContent = "Logging in...";
@@ -262,11 +220,13 @@ async function login() {
     message.style.color = "white";
     message.textContent = "Please wait...";
 
+
     try {
 
-        // ------------------------------------------
-        // Firebase Authentication
-        // ------------------------------------------
+        /* ============================================
+           STEP 1
+           FIREBASE AUTH LOGIN
+        ============================================ */
 
         const result =
             await signInWithEmailAndPassword(
@@ -275,36 +235,61 @@ async function login() {
                 password
             );
 
+
         const user = result.user;
+
         const uid = user.uid;
 
-        console.log("Firebase Auth UID:", uid);
+
+        console.log(
+            "AUTH LOGIN SUCCESS"
+        );
+
+        console.log(
+            "Firebase UID:",
+            uid
+        );
+
 
         message.textContent =
             "Login successful. User data check ho raha hai...";
 
 
-        // ------------------------------------------
-        // Firestore Users document
-        // ------------------------------------------
+        /* ============================================
+           STEP 2
+           FIRESTORE USERS DOCUMENT
+        ============================================ */
 
         const userRef =
-            doc(db, "Users", uid);
+            doc(
+                db,
+                "Users",
+                uid
+            );
 
-        const userDoc =
-            await getDoc(userRef);
 
         console.log(
-            "Firestore document exists:",
-            userDoc.exists()
+            "Firestore path:",
+            "Users/" + uid
         );
 
 
-        // ------------------------------------------
-        // User document nahi mila
-        // ------------------------------------------
+        const userSnapshot =
+            await getDoc(userRef);
 
-        if (!userDoc.exists()) {
+
+        console.log(
+            "Firestore document exists:",
+            userSnapshot.exists()
+        );
+
+
+        /* ============================================
+           STEP 3
+           DOCUMENT NOT FOUND
+        ============================================ */
+
+        if (!userSnapshot.exists()) {
 
             await signOut(auth);
 
@@ -314,8 +299,8 @@ async function login() {
                 "User data nahi mila. UID: " + uid;
 
             console.error(
-                "Firestore document not found:",
-                uid
+                "DOCUMENT NOT FOUND",
+                "Users/" + uid
             );
 
             loginBtn.disabled = false;
@@ -325,21 +310,41 @@ async function login() {
         }
 
 
-        // ------------------------------------------
-        // User data
-        // ------------------------------------------
+        /* ============================================
+           STEP 4
+           GET USER DATA
+        ============================================ */
 
-        const data = userDoc.data();
+        const data =
+            userSnapshot.data();
+
 
         console.log(
-            "Firestore User Data:",
+            "FIRESTORE USER DATA:",
             data
         );
 
 
-        // ------------------------------------------
-        // ADMIN
-        // ------------------------------------------
+        console.log(
+            "Role:",
+            data.role
+        );
+
+        console.log(
+            "Approved:",
+            data.approved
+        );
+
+        console.log(
+            "Points:",
+            data.points
+        );
+
+
+        /* ============================================
+           STEP 5
+           ADMIN LOGIN
+        ============================================ */
 
         if (
             data.role === "admin" &&
@@ -351,20 +356,27 @@ async function login() {
             message.textContent =
                 "Admin login successful!";
 
-            setTimeout(function() {
+            console.log(
+                "ADMIN LOGIN SUCCESS"
+            );
+
+
+            setTimeout(() => {
 
                 window.location.href =
                     "admin.html";
 
-            }, 500);
+            }, 700);
+
 
             return;
         }
 
 
-        // ------------------------------------------
-        // APPROVED USER
-        // ------------------------------------------
+        /* ============================================
+           STEP 6
+           NORMAL USER LOGIN
+        ============================================ */
 
         if (
             data.role === "user" &&
@@ -376,20 +388,27 @@ async function login() {
             message.textContent =
                 "Login successful!";
 
-            setTimeout(function() {
+            console.log(
+                "USER LOGIN SUCCESS"
+            );
+
+
+            setTimeout(() => {
 
                 window.location.href =
                     "index.html";
 
-            }, 500);
+            }, 700);
+
 
             return;
         }
 
 
-        // ------------------------------------------
-        // NOT APPROVED
-        // ------------------------------------------
+        /* ============================================
+           STEP 7
+           NOT APPROVED
+        ============================================ */
 
         await signOut(auth);
 
@@ -405,12 +424,17 @@ async function login() {
     } catch (error) {
 
         console.error(
-            "LOGIN ERROR:",
+            "VIKTORIX LOGIN ERROR:",
             error
         );
 
+
         message.style.color = "#ff5252";
 
+
+        /* --------------------------------------------
+           AUTH ERRORS
+        -------------------------------------------- */
 
         if (
             error.code === "auth/invalid-credential" ||
@@ -450,7 +474,8 @@ async function login() {
         }
 
         else if (
-            error.code === "permission-denied"
+            error.code === "permission-denied" ||
+            error.code === "firestore/permission-denied"
         ) {
 
             message.textContent =
@@ -463,6 +488,7 @@ async function login() {
             message.textContent =
                 "Error: " + error.message;
         }
+
 
         loginBtn.disabled = false;
         loginBtn.textContent = "Login";
