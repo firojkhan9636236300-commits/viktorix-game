@@ -1,3 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIKTORIX Login</title>
+
+<style>
+body {
+    margin: 0;
+    padding: 0;
+    background: #03152f;
+    color: white;
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+.container {
+    width: 90%;
+    max-width: 400px;
+    margin: 80px auto;
+    padding: 30px 20px;
+    background: #051f46;
+    border-radius: 15px;
+    box-sizing: border-box;
+}
+
+h1 {
+    color: #00bfff;
+    margin-bottom: 30px;
+}
+
+input {
+    width: 100%;
+    padding: 14px;
+    margin: 10px 0;
+    box-sizing: border-box;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+button {
+    width: 100%;
+    padding: 14px;
+    margin-top: 15px;
+    border: none;
+    border-radius: 8px;
+    background: #00bfff;
+    color: white;
+    font-size: 17px;
+    font-weight: bold;
+}
+
+#message {
+    margin-top: 20px;
+    min-height: 24px;
+    word-break: break-word;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>VIKTORIX</h1>
+
+<input type="email" id="username" placeholder="Email">
+
+<input type="password" id="password" placeholder="Password">
+
+<button id="loginBtn">Login</button>
+
+<div id="message"></div>
+
+</div>
+
 <script type="module">
 
 import { auth, db } from "./firebase.js";
@@ -11,16 +89,12 @@ import {
     doc,
     getDoc
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-
-
 const usernameInput = document.getElementById("username");
 const passwordInput = document.getElementById("password");
 const loginBtn = document.getElementById("loginBtn");
 const message = document.getElementById("message");
 
-
 loginBtn.addEventListener("click", login);
-
 
 async function login() {
 
@@ -51,10 +125,7 @@ async function login() {
         const userRef = doc(db, "Users", uid);
         const userDoc = await getDoc(userRef);
 
-        console.log("UID:", uid);
-        console.log("Document path:", userRef.path);
         console.log("Document exists:", userDoc.exists());
-        console.log("Document data:", userDoc.data());
 
         if (!userDoc.exists()) {
 
@@ -72,8 +143,6 @@ async function login() {
 
         console.log("Firestore User Data:", data);
 
-
-        // ADMIN
         if (
             data.role === "admin" &&
             data.approved === true
@@ -86,8 +155,6 @@ async function login() {
             return;
         }
 
-
-        // APPROVED USER
         if (
             data.role === "user" &&
             data.approved === true
@@ -100,8 +167,6 @@ async function login() {
             return;
         }
 
-
-        // NOT APPROVED
         await signOut(auth);
 
         message.textContent =
@@ -136,7 +201,7 @@ async function login() {
     loginBtn.disabled = false;
     loginBtn.textContent = "Login";
 }
-
 </script>
+
 </body>
-</html>
+</html>    
