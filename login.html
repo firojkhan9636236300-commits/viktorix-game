@@ -129,12 +129,7 @@ button:disabled {
 
 </div>
 
-
 <script type="module">
-
-/* =====================================================
-   FIREBASE
-===================================================== */
 
 import { auth, db } from "./firebase.js";
 
@@ -149,60 +144,23 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 
-/* =====================================================
-   HTML ELEMENTS
-===================================================== */
-
 const message = document.getElementById("message");
 const loginBtn = document.getElementById("loginBtn");
 const usernameInput = document.getElementById("username");
 const passwordInput = document.getElementById("password");
 
 
-/* =====================================================
-   CHECK FIREBASE
-===================================================== */
-
-console.log("VIKTORIX Login started");
-console.log("Auth:", auth);
-console.log("Firestore:", db);
-
-if (!auth || !db) {
-
-    message.style.color = "#ff5252";
-
-    message.textContent =
-        "Firebase connect nahi hua.";
-
-    loginBtn.disabled = true;
-}
-
-
-/* =====================================================
-   LOGIN BUTTON
-===================================================== */
-
 loginBtn.addEventListener("click", login);
 
-
-/* =====================================================
-   LOGIN FUNCTION
-===================================================== */
 
 async function login() {
 
     const email = usernameInput.value.trim();
     const password = passwordInput.value;
 
-
-    /* -----------------------------------------------
-       EMPTY CHECK
-    ----------------------------------------------- */
-
     if (!email || !password) {
 
         message.style.color = "#ffcc00";
-
         message.textContent =
             "Email aur password dono bharo.";
 
@@ -210,23 +168,18 @@ async function login() {
     }
 
 
-    /* -----------------------------------------------
-       BUTTON LOCK
-    ----------------------------------------------- */
-
     loginBtn.disabled = true;
     loginBtn.textContent = "Logging in...";
 
     message.style.color = "white";
-    message.textContent = "Please wait...";
+    message.textContent = "Firebase login ho raha hai...";
 
 
     try {
 
-        /* ============================================
-           STEP 1
-           FIREBASE AUTH LOGIN
-        ============================================ */
+        /* =========================================
+           AUTH LOGIN
+        ========================================= */
 
         const result =
             await signInWithEmailAndPassword(
@@ -235,30 +188,21 @@ async function login() {
                 password
             );
 
-
         const user = result.user;
-
         const uid = user.uid;
 
 
-        console.log(
-            "AUTH LOGIN SUCCESS"
-        );
-
-        console.log(
-            "Firebase UID:",
-            uid
-        );
+        console.log("AUTH SUCCESS");
+        console.log("UID:", uid);
 
 
         message.textContent =
-            "Login successful. User data check ho raha hai...";
+            "Authentication successful...";
 
 
-        /* ============================================
-           STEP 2
-           FIRESTORE USERS DOCUMENT
-        ============================================ */
+        /* =========================================
+           FIRESTORE DOCUMENT
+        ========================================= */
 
         const userRef =
             doc(
@@ -268,42 +212,34 @@ async function login() {
             );
 
 
-        console.log(
-            "Firestore path:",
-            "Users/" + uid
-        );
+        console.log("Firestore path:", userRef.path);
 
 
-        const userSnapshot =
-            await getDoc(userRef);
-console.log("UID USED:", uid);
-console.log("DOCUMENT PATH:", userRef.path);
-console.log("DOCUMENT DATA:", userSnapshot.exists() ? userSnapshot.data() : "NO DATA");
+        let userSnapshot;
 
-        console.log(
-            "Firestore document exists:",
-            userSnapshot.exists()
-        );
+        try {
 
+            userSnapshot =
+                await getDoc(userRef);
 
-        /* ============================================
-           STEP 3
-           DOCUMENT NOT FOUND
-        ============================================ */
+        } catch (firestoreError) {
 
-        if (!userSnapshot.exists()) {
-
-            await signOut(auth);
+            console.error(
+                "FIRESTORE ERROR:",
+                firestoreError
+            );
 
             message.style.color = "#ff5252";
 
-            message.textContent =
-                "User data nahi mila. UID: " + uid;
+            message.innerHTML =
+                "<b>FIRESTORE ERROR</b><br><br>" +
+                "Code: " +
+                firestoreError.code +
+                "<br><br>" +
+                "Message: " +
+                firestoreError.message;
 
-            console.error(
-                "DOCUMENT NOT FOUND",
-                "Users/" + uid
-            );
+            await signOut(auth);
 
             loginBtn.disabled = false;
             loginBtn.textContent = "Login";
@@ -312,41 +248,74 @@ console.log("DOCUMENT DATA:", userSnapshot.exists() ? userSnapshot.data() : "NO 
         }
 
 
-        /* ============================================
-           STEP 4
-           GET USER DATA
-        ============================================ */
+        /* =========================================
+           DOCUMENT RESULT
+        ========================================= */
+
+        console.log(
+            "DOCUMENT EXISTS:",
+            userSnapshot.exists()
+        );
+
+
+        if (!userSnapshot.exists()) {
+
+            console.error(
+                "DOCUMENT NOT FOUND:",
+                userRef.path
+            );
+
+            await signOut(auth);
+
+            message.style.color = "#ff5252";
+
+            message.innerHTML =
+                "<b>FIRESTORE DOCUMENT NOT FOUND</b><br><br>" +
+                "Project: viktorix-game<br>" +
+                "Database: (default)<br>" +
+                "Collection: Users<br>" +
+                "UID: " + uid;
+
+            loginBtn.disabled = false;
+            loginBtn.textContent = "Login";
+
+            return;
+        }
+
+
+        /* =========================================
+           DOCUMENT FOUND
+        ========================================= */
 
         const data =
             userSnapshot.data();
 
 
         console.log(
-            "FIRESTORE USER DATA:",
+            "FIRESTORE DATA:",
             data
         );
 
 
         console.log(
-            "Role:",
+            "ROLE:",
             data.role
         );
 
         console.log(
-            "Approved:",
+            "APPROVED:",
             data.approved
         );
 
         console.log(
-            "Points:",
+            "POINTS:",
             data.points
         );
 
 
-        /* ============================================
-           STEP 5
-           ADMIN LOGIN
-        ============================================ */
+        /* =========================================
+           ADMIN
+        ========================================= */
 
         if (
             data.role === "admin" &&
@@ -358,10 +327,6 @@ console.log("DOCUMENT DATA:", userSnapshot.exists() ? userSnapshot.data() : "NO 
             message.textContent =
                 "Admin login successful!";
 
-            console.log(
-                "ADMIN LOGIN SUCCESS"
-            );
-
 
             setTimeout(() => {
 
@@ -370,15 +335,13 @@ console.log("DOCUMENT DATA:", userSnapshot.exists() ? userSnapshot.data() : "NO 
 
             }, 700);
 
-
             return;
         }
 
 
-        /* ============================================
-           STEP 6
-           NORMAL USER LOGIN
-        ============================================ */
+        /* =========================================
+           NORMAL USER
+        ========================================= */
 
         if (
             data.role === "user" &&
@@ -390,10 +353,6 @@ console.log("DOCUMENT DATA:", userSnapshot.exists() ? userSnapshot.data() : "NO 
             message.textContent =
                 "Login successful!";
 
-            console.log(
-                "USER LOGIN SUCCESS"
-            );
-
 
             setTimeout(() => {
 
@@ -402,22 +361,20 @@ console.log("DOCUMENT DATA:", userSnapshot.exists() ? userSnapshot.data() : "NO 
 
             }, 700);
 
-
             return;
         }
 
 
-        /* ============================================
-           STEP 7
-           NOT APPROVED
-        ============================================ */
+        /* =========================================
+           NOT APPROVED / INVALID ROLE
+        ========================================= */
 
         await signOut(auth);
 
         message.style.color = "#ffcc00";
 
         message.textContent =
-            "Aapka account abhi Admin ne approve nahi kiya.";
+            "Account approved nahi hai.";
 
         loginBtn.disabled = false;
         loginBtn.textContent = "Login";
@@ -433,68 +390,19 @@ console.log("DOCUMENT DATA:", userSnapshot.exists() ? userSnapshot.data() : "NO 
 
         message.style.color = "#ff5252";
 
-
-        /* --------------------------------------------
-           AUTH ERRORS
-        -------------------------------------------- */
-
-        if (
-            error.code === "auth/invalid-credential" ||
-            error.code === "auth/wrong-password"
-        ) {
-
-            message.textContent =
-                "Email ya password galat hai.";
-
-        }
-
-        else if (
-            error.code === "auth/user-not-found"
-        ) {
-
-            message.textContent =
-                "Account nahi mila.";
-
-        }
-
-        else if (
-            error.code === "auth/invalid-email"
-        ) {
-
-            message.textContent =
-                "Email format galat hai.";
-
-        }
-
-        else if (
-            error.code === "auth/too-many-requests"
-        ) {
-
-            message.textContent =
-                "Bahut zyada login attempts. Thodi der baad try karo.";
-
-        }
-
-        else if (
-            error.code === "permission-denied" ||
-            error.code === "firestore/permission-denied"
-        ) {
-
-            message.textContent =
-                "Firestore permission denied. Firebase Rules check karo.";
-
-        }
-
-        else {
-
-            message.textContent =
-                "Error: " + error.message;
-        }
+        message.innerHTML =
+            "<b>LOGIN ERROR</b><br><br>" +
+            "Code: " +
+            (error.code || "unknown") +
+            "<br><br>" +
+            "Message: " +
+            (error.message || "Unknown error");
 
 
         loginBtn.disabled = false;
         loginBtn.textContent = "Login";
     }
+
 }
 
 </script>
