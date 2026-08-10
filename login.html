@@ -276,7 +276,9 @@ async function login() {
 
         const userSnapshot =
             await getDoc(userRef);
-
+console.log("UID USED:", uid);
+console.log("DOCUMENT PATH:", userRef.path);
+console.log("DOCUMENT DATA:", userSnapshot.exists() ? userSnapshot.data() : "NO DATA");
 
         console.log(
             "Firestore document exists:",
