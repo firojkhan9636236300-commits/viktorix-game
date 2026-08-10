@@ -28,8 +28,7 @@ async function login() {
     const password = passwordInput.value;
 
     if (!email || !password) {
-        message.textContent =
-            "Email aur password dono bharo.";
+        message.textContent = "Email aur password dono bharo.";
         return;
     }
 
@@ -39,7 +38,6 @@ async function login() {
 
     try {
 
-        // Firebase Authentication
         const result = await signInWithEmailAndPassword(
             auth,
             email,
@@ -50,7 +48,6 @@ async function login() {
 
         console.log("Firebase Auth UID:", uid);
 
-        // Firestore Users document
         const userRef = doc(db, "Users", uid);
         const userDoc = await getDoc(userRef);
 
@@ -122,21 +119,18 @@ async function login() {
             message.textContent =
                 "Email ya password galat hai.";
 
-        }
-        else if (
+        } else if (
             error.code === "auth/user-not-found"
         ) {
 
             message.textContent =
                 "Account nahi mila.";
 
-        }
-        else {
+        } else {
 
             message.textContent =
                 error.message;
         }
-
     }
 
     loginBtn.disabled = false;
