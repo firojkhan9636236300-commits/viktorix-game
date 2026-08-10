@@ -3,92 +3,83 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>VIKTORIX Login</title>
 
 <style>
-* {
-    box-sizing: border-box;
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    min-height:100vh;
+    background:#03152f;
+    color:white;
+    font-family:Arial,sans-serif;
 }
 
-body {
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-    background: #03152f;
-    color: white;
-    font-family: Arial, sans-serif;
+.container{
+    width:90%;
+    max-width:400px;
+    margin:80px auto;
+    padding:30px 20px;
+    background:#051f46;
+    border-radius:15px;
+    box-shadow:0 0 25px rgba(0,191,255,.20);
 }
 
-.container {
-    width: 90%;
-    max-width: 400px;
-    margin: 80px auto;
-    padding: 30px 20px;
-    background: #051f46;
-    border-radius: 15px;
-    box-shadow: 0 0 25px rgba(0,191,255,0.20);
+h1{
+    text-align:center;
+    color:#00bfff;
+    margin:0 0 30px;
+    font-size:32px;
 }
 
-h1 {
-    text-align: center;
-    color: #00bfff;
-    margin: 0 0 30px 0;
-    font-size: 32px;
+label{
+    display:block;
+    margin:12px 0 6px;
+    color:#cfefff;
+    font-size:14px;
 }
 
-label {
-    display: block;
-    margin-top: 12px;
-    margin-bottom: 6px;
-    color: #cfefff;
-    font-size: 14px;
+input{
+    width:100%;
+    padding:14px;
+    margin-bottom:8px;
+    border:0;
+    outline:0;
+    border-radius:8px;
+    font-size:16px;
 }
 
-input {
-    width: 100%;
-    padding: 14px;
-    margin-bottom: 8px;
-    border: none;
-    outline: none;
-    border-radius: 8px;
-    font-size: 16px;
-    background: white;
-    color: #111;
+button{
+    width:100%;
+    padding:14px;
+    margin-top:15px;
+    border:0;
+    border-radius:8px;
+    background:#00bfff;
+    color:white;
+    font-size:17px;
+    font-weight:bold;
 }
 
-button {
-    width: 100%;
-    padding: 14px;
-    margin-top: 15px;
-    border: none;
-    border-radius: 8px;
-    background: #00bfff;
-    color: white;
-    font-size: 17px;
-    font-weight: bold;
-    cursor: pointer;
+button:disabled{
+    opacity:.6;
 }
 
-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+#message{
+    margin-top:20px;
+    padding:10px;
+    min-height:24px;
+    text-align:center;
+    word-break:break-word;
+    line-height:1.5;
 }
 
-#message {
-    margin-top: 20px;
-    padding: 10px;
-    min-height: 24px;
-    text-align: center;
-    word-break: break-word;
-    line-height: 1.5;
-}
-
-.info {
-    text-align: center;
-    margin-top: 15px;
-    color: #9ec7dd;
-    font-size: 12px;
+.info{
+    text-align:center;
+    margin-top:15px;
+    color:#9ec7dd;
+    font-size:12px;
 }
 </style>
 </head>
@@ -97,35 +88,31 @@ button:disabled {
 
 <div class="container">
 
-    <h1>VIKTORIX</h1>
+<h1>VIKTORIX</h1>
 
-    <label for="username">Email</label>
+<label>Email</label>
+<input
+    type="email"
+    id="username"
+    placeholder="Enter your email"
+    autocomplete="email"
+>
 
-    <input
-        type="email"
-        id="username"
-        placeholder="Enter your email"
-        autocomplete="email"
-    >
+<label>Password</label>
+<input
+    type="password"
+    id="password"
+    placeholder="Enter your password"
+    autocomplete="current-password"
+>
 
-    <label for="password">Password</label>
+<button id="loginBtn">Login</button>
 
-    <input
-        type="password"
-        id="password"
-        placeholder="Enter your password"
-        autocomplete="current-password"
-    >
+<div id="message"></div>
 
-    <button id="loginBtn" type="button">
-        Login
-    </button>
-
-    <div id="message"></div>
-
-    <div class="info">
-        VIKTORIX Secure Login
-    </div>
+<div class="info">
+VIKTORIX Secure Login
+</div>
 
 </div>
 
@@ -139,47 +126,36 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
 import {
-    doc,
-    getDoc
+    collection,
+    getDocs
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-
 
 const message = document.getElementById("message");
 const loginBtn = document.getElementById("loginBtn");
-const usernameInput = document.getElementById("username");
+const emailInput = document.getElementById("username");
 const passwordInput = document.getElementById("password");
-
 
 loginBtn.addEventListener("click", login);
 
+async function login(){
 
-async function login() {
-
-    const email = usernameInput.value.trim();
+    const email = emailInput.value.trim();
     const password = passwordInput.value;
 
-    if (!email || !password) {
-
-        message.style.color = "#ffcc00";
-        message.textContent =
-            "Email aur password dono bharo.";
-
+    if(!email || !password){
+        message.style.color="#ffcc00";
+        message.textContent="Email aur password dono bharo.";
         return;
     }
 
+    loginBtn.disabled=true;
+    loginBtn.textContent="Logging in...";
+    message.style.color="white";
+    message.textContent="Login ho raha hai...";
 
-    loginBtn.disabled = true;
-    loginBtn.textContent = "Logging in...";
+    try{
 
-    message.style.color = "white";
-    message.textContent = "Firebase login ho raha hai...";
-
-
-    try {
-
-        /* =========================================
-           AUTH LOGIN
-        ========================================= */
+        /* AUTH */
 
         const result =
             await signInWithEmailAndPassword(
@@ -188,219 +164,90 @@ async function login() {
                 password
             );
 
-        const user = result.user;
-        const uid = user.uid;
+        const uid=result.user.uid;
+
+        console.log("AUTH UID:",uid);
+
+        message.textContent=
+            "Auth successful. Users collection check ho rahi hai...";
 
 
-        console.log("AUTH SUCCESS");
-        console.log("UID:", uid);
+        /* USERS COLLECTION TEST */
+
+        const usersRef=collection(db,"Users");
+
+        const snapshot=await getDocs(usersRef);
+
+        console.log(
+            "USERS COUNT:",
+            snapshot.size
+        );
 
 
-        message.textContent =
-            "Authentication successful...";
+        let ids=[];
 
+        snapshot.forEach((item)=>{
 
-        /* =========================================
-           FIRESTORE DOCUMENT
-        ========================================= */
-
-        const userRef =
-            doc(
-                db,
-                "Users",
-                uid
+            console.log(
+                "DOCUMENT:",
+                item.id,
+                item.data()
             );
 
+            ids.push(item.id);
 
-        console.log("Firestore path:", userRef.path);
+        });
 
 
-        let userSnapshot;
+        /* RESULT */
 
-        try {
-
-            userSnapshot =
-                await getDoc(userRef);
-
-        } catch (firestoreError) {
-
-            console.error(
-                "FIRESTORE ERROR:",
-                firestoreError
-            );
-
-            message.style.color = "#ff5252";
-
-            message.innerHTML =
-                "<b>FIRESTORE ERROR</b><br><br>" +
-                "Code: " +
-                firestoreError.code +
-                "<br><br>" +
-                "Message: " +
-                firestoreError.message;
+        if(snapshot.empty){
 
             await signOut(auth);
 
-            loginBtn.disabled = false;
-            loginBtn.textContent = "Login";
+            message.style.color="#ff5252";
 
-            return;
-        }
+            message.innerHTML=
+                "<b>USERS COLLECTION EMPTY</b><br><br>"+
+                "Website ko Users ka koi document nahi mila.<br><br>"+
+                "Auth UID:<br>"+
+                uid;
 
+        }else{
 
-        /* =========================================
-           DOCUMENT RESULT
-        ========================================= */
+            message.style.color="#00ff88";
 
-        console.log(
-            "DOCUMENT EXISTS:",
-            userSnapshot.exists()
-        );
-
-
-        if (!userSnapshot.exists()) {
-
-            console.error(
-                "DOCUMENT NOT FOUND:",
-                userRef.path
-            );
+            message.innerHTML=
+                "<b>USERS COLLECTION FOUND</b><br><br>"+
+                "Documents: "+
+                snapshot.size+
+                "<br><br>"+
+                "IDs:<br>"+
+                ids.join("<br>");
 
             await signOut(auth);
 
-            message.style.color = "#ff5252";
-
-            message.innerHTML =
-                "<b>FIRESTORE DOCUMENT NOT FOUND</b><br><br>" +
-                "Project: viktorix-game<br>" +
-                "Database: (default)<br>" +
-                "Collection: Users<br>" +
-                "UID: " + uid;
-
-            loginBtn.disabled = false;
-            loginBtn.textContent = "Login";
-
-            return;
         }
 
+        loginBtn.disabled=false;
+        loginBtn.textContent="Login";
 
-        /* =========================================
-           DOCUMENT FOUND
-        ========================================= */
+    }catch(error){
 
-        const data =
-            userSnapshot.data();
+        console.error("TEST ERROR:",error);
 
+        message.style.color="#ff5252";
 
-        console.log(
-            "FIRESTORE DATA:",
-            data
-        );
-
-
-        console.log(
-            "ROLE:",
-            data.role
-        );
-
-        console.log(
-            "APPROVED:",
-            data.approved
-        );
-
-        console.log(
-            "POINTS:",
-            data.points
-        );
-
-
-        /* =========================================
-           ADMIN
-        ========================================= */
-
-        if (
-            data.role === "admin" &&
-            data.approved === true
-        ) {
-
-            message.style.color = "#00ff88";
-
-            message.textContent =
-                "Admin login successful!";
-
-
-            setTimeout(() => {
-
-                window.location.href =
-                    "admin.html";
-
-            }, 700);
-
-            return;
-        }
-
-
-        /* =========================================
-           NORMAL USER
-        ========================================= */
-
-        if (
-            data.role === "user" &&
-            data.approved === true
-        ) {
-
-            message.style.color = "#00ff88";
-
-            message.textContent =
-                "Login successful!";
-
-
-            setTimeout(() => {
-
-                window.location.href =
-                    "index.html";
-
-            }, 700);
-
-            return;
-        }
-
-
-        /* =========================================
-           NOT APPROVED / INVALID ROLE
-        ========================================= */
-
-        await signOut(auth);
-
-        message.style.color = "#ffcc00";
-
-        message.textContent =
-            "Account approved nahi hai.";
-
-        loginBtn.disabled = false;
-        loginBtn.textContent = "Login";
-
-
-    } catch (error) {
-
-        console.error(
-            "VIKTORIX LOGIN ERROR:",
-            error
-        );
-
-
-        message.style.color = "#ff5252";
-
-        message.innerHTML =
-            "<b>LOGIN ERROR</b><br><br>" +
-            "Code: " +
-            (error.code || "unknown") +
-            "<br><br>" +
-            "Message: " +
+        message.innerHTML=
+            "<b>FIRESTORE TEST ERROR</b><br><br>"+
+            "Code: "+
+            (error.code || "unknown")+
+            "<br><br>"+
+            "Message:<br>"+
             (error.message || "Unknown error");
 
-
-        loginBtn.disabled = false;
-        loginBtn.textContent = "Login";
+        loginBtn.disabled=false;
+        loginBtn.textContent="Login";
     }
 
 }
