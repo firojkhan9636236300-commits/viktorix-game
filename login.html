@@ -3,16 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>VIKTORIX Login</title>
 
 <style>
+* {
+    box-sizing: border-box;
+}
+
 body {
     margin: 0;
     padding: 0;
+    min-height: 100vh;
     background: #03152f;
     color: white;
     font-family: Arial, sans-serif;
-    text-align: center;
 }
 
 .container {
@@ -22,22 +27,34 @@ body {
     padding: 30px 20px;
     background: #051f46;
     border-radius: 15px;
-    box-sizing: border-box;
+    box-shadow: 0 0 25px rgba(0,191,255,0.20);
 }
 
 h1 {
+    text-align: center;
     color: #00bfff;
-    margin-bottom: 30px;
+    margin: 0 0 30px 0;
+    font-size: 32px;
+}
+
+label {
+    display: block;
+    margin-top: 12px;
+    margin-bottom: 6px;
+    color: #cfefff;
+    font-size: 14px;
 }
 
 input {
     width: 100%;
     padding: 14px;
-    margin: 10px 0;
-    box-sizing: border-box;
+    margin-bottom: 8px;
     border: none;
+    outline: none;
     border-radius: 8px;
     font-size: 16px;
+    background: white;
+    color: #111;
 }
 
 button {
@@ -50,12 +67,28 @@ button {
     color: white;
     font-size: 17px;
     font-weight: bold;
+    cursor: pointer;
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 #message {
     margin-top: 20px;
+    padding: 10px;
     min-height: 24px;
+    text-align: center;
     word-break: break-word;
+    line-height: 1.5;
+}
+
+.info {
+    text-align: center;
+    margin-top: 15px;
+    color: #9ec7dd;
+    font-size: 12px;
 }
 </style>
 </head>
@@ -64,37 +97,139 @@ button {
 
 <div class="container">
 
-<h1>VIKTORIX</h1>
+    <h1>VIKTORIX</h1>
 
-<input type="email" id="username" placeholder="Email">
+    <label for="username">Email</label>
+    <input
+        type="email"
+        id="username"
+        placeholder="Enter your email"
+        autocomplete="email"
+    >
 
-<input type="password" id="password" placeholder="Password">
+    <label for="password">Password</label>
+    <input
+        type="password"
+        id="password"
+        placeholder="Enter your password"
+        autocomplete="current-password"
+    >
 
-<button id="loginBtn">Login</button>
+    <button id="loginBtn" type="button">
+        Login
+    </button>
 
-<div id="message"></div>
+    <div id="message"></div>
+
+    <div class="info">
+        VIKTORIX Secure Login
+    </div>
 
 </div>
 
 <script type="module">
 
-import { auth, db } from "./firebase.js";
-
-import {
-    signInWithEmailAndPassword,
-    signOut
-} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
-
-import {
-    doc,
-    getDoc
-} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+const message = document.getElementById("message");
+const loginBtn = document.getElementById("loginBtn");
 const usernameInput = document.getElementById("username");
 const passwordInput = document.getElementById("password");
-const loginBtn = document.getElementById("loginBtn");
-const message = document.getElementById("message");
+
+
+// --------------------------------------------------
+// Firebase load
+// --------------------------------------------------
+
+let auth;
+let db;
+
+try {
+
+    message.textContent = "Firebase loading...";
+
+    const firebaseModule = await import("./firebase.js");
+
+    auth = firebaseModule.auth;
+    db = firebaseModule.db;
+
+    if (!auth || !db) {
+        throw new Error(
+            "firebase.js se auth ya db load nahi hua."
+        );
+    }
+
+    message.textContent = "";
+
+    console.log("Firebase successfully loaded.");
+
+} catch (error) {
+
+    console.error("Firebase Load Error:", error);
+
+    message.textContent =
+        "Firebase load nahi hua: " + error.message;
+
+    message.style.color = "#ff5252";
+
+    loginBtn.disabled = true;
+}
+
+
+// --------------------------------------------------
+// Firebase modules
+// --------------------------------------------------
+
+let signInWithEmailAndPassword;
+let signOut;
+let doc;
+let getDoc;
+
+try {
+
+    if (auth && db) {
+
+        const authModule = await import(
+            "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js"
+        );
+
+        const firestoreModule = await import(
+            "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js"
+        );
+
+        signInWithEmailAndPassword =
+            authModule.signInWithEmailAndPassword;
+
+        signOut =
+            authModule.signOut;
+
+        doc =
+            firestoreModule.doc;
+
+        getDoc =
+            firestoreModule.getDoc;
+
+        console.log("Firebase Auth and Firestore loaded.");
+
+    }
+
+} catch (error) {
+
+    console.error("Firebase SDK Error:", error);
+
+    message.textContent =
+        "Firebase SDK error: " + error.message;
+
+    message.style.color = "#ff5252";
+
+    loginBtn.disabled = true;
+}
+
+
+// --------------------------------------------------
+// Login
+// --------------------------------------------------
 
 loginBtn.addEventListener("click", login);
+
 
 async function login() {
 
@@ -102,79 +237,180 @@ async function login() {
     const password = passwordInput.value;
 
     if (!email || !password) {
-        message.textContent = "Email aur password dono bharo.";
+
+        message.style.color = "#ffcc00";
+
+        message.textContent =
+            "Email aur password dono bharo.";
+
+        return;
+    }
+
+    if (!auth || !db) {
+
+        message.style.color = "#ff5252";
+
+        message.textContent =
+            "Firebase connect nahi hai.";
+
         return;
     }
 
     loginBtn.disabled = true;
     loginBtn.textContent = "Logging in...";
-    message.textContent = "";
+
+    message.style.color = "white";
+    message.textContent = "Please wait...";
 
     try {
 
-        const result = await signInWithEmailAndPassword(
-            auth,
-            email,
-            password
-        );
+        // ------------------------------------------
+        // Firebase Authentication
+        // ------------------------------------------
 
-        const uid = result.user.uid;
+        const result =
+            await signInWithEmailAndPassword(
+                auth,
+                email,
+                password
+            );
+
+        const user = result.user;
+        const uid = user.uid;
 
         console.log("Firebase Auth UID:", uid);
 
-        const userRef = doc(db, "Users", uid);
-        const userDoc = await getDoc(userRef);
+        message.textContent =
+            "Login successful. User data check ho raha hai...";
 
-        console.log("Document exists:", userDoc.exists());
+
+        // ------------------------------------------
+        // Firestore Users document
+        // ------------------------------------------
+
+        const userRef =
+            doc(db, "Users", uid);
+
+        const userDoc =
+            await getDoc(userRef);
+
+        console.log(
+            "Firestore document exists:",
+            userDoc.exists()
+        );
+
+
+        // ------------------------------------------
+        // User document nahi mila
+        // ------------------------------------------
 
         if (!userDoc.exists()) {
 
             await signOut(auth);
 
+            message.style.color = "#ff5252";
+
             message.textContent =
                 "User data nahi mila. UID: " + uid;
 
+            console.error(
+                "Firestore document not found:",
+                uid
+            );
+
             loginBtn.disabled = false;
             loginBtn.textContent = "Login";
+
             return;
         }
 
+
+        // ------------------------------------------
+        // User data
+        // ------------------------------------------
+
         const data = userDoc.data();
 
-        console.log("Firestore User Data:", data);
+        console.log(
+            "Firestore User Data:",
+            data
+        );
+
+
+        // ------------------------------------------
+        // ADMIN
+        // ------------------------------------------
 
         if (
             data.role === "admin" &&
             data.approved === true
         ) {
 
+            message.style.color = "#00ff88";
+
             message.textContent =
                 "Admin login successful!";
 
-            window.location.href = "admin.html";
+            setTimeout(function() {
+
+                window.location.href =
+                    "admin.html";
+
+            }, 500);
+
             return;
         }
+
+
+        // ------------------------------------------
+        // APPROVED USER
+        // ------------------------------------------
 
         if (
             data.role === "user" &&
             data.approved === true
         ) {
 
+            message.style.color = "#00ff88";
+
             message.textContent =
                 "Login successful!";
 
-            window.location.href = "index.html";
+            setTimeout(function() {
+
+                window.location.href =
+                    "index.html";
+
+            }, 500);
+
             return;
         }
 
+
+        // ------------------------------------------
+        // NOT APPROVED
+        // ------------------------------------------
+
         await signOut(auth);
+
+        message.style.color = "#ffcc00";
 
         message.textContent =
             "Aapka account abhi Admin ne approve nahi kiya.";
 
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Login";
+
+
     } catch (error) {
 
-        console.error("LOGIN ERROR:", error);
+        console.error(
+            "LOGIN ERROR:",
+            error
+        );
+
+        message.style.color = "#ff5252";
+
 
         if (
             error.code === "auth/invalid-credential" ||
@@ -184,24 +420,56 @@ async function login() {
             message.textContent =
                 "Email ya password galat hai.";
 
-        } else if (
+        }
+
+        else if (
             error.code === "auth/user-not-found"
         ) {
 
             message.textContent =
                 "Account nahi mila.";
 
-        } else {
+        }
+
+        else if (
+            error.code === "auth/invalid-email"
+        ) {
 
             message.textContent =
-                error.message;
-        }
-    }
+                "Email format galat hai.";
 
-    loginBtn.disabled = false;
-    loginBtn.textContent = "Login";
+        }
+
+        else if (
+            error.code === "auth/too-many-requests"
+        ) {
+
+            message.textContent =
+                "Bahut zyada login attempts. Thodi der baad try karo.";
+
+        }
+
+        else if (
+            error.code === "permission-denied"
+        ) {
+
+            message.textContent =
+                "Firestore permission denied. Firebase Rules check karo.";
+
+        }
+
+        else {
+
+            message.textContent =
+                "Error: " + error.message;
+        }
+
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Login";
+    }
 }
+
 </script>
 
 </body>
-</html>    
+</html>
