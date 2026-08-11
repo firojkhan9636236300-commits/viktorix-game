@@ -132,48 +132,34 @@ import {
     getDoc
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
-
 const message = document.getElementById("message");
 const loginBtn = document.getElementById("loginBtn");
 
 const emailInput = document.getElementById("username");
 const passwordInput = document.getElementById("password");
 
-
 loginBtn.addEventListener("click", login);
-
 
 async function login(){
 
     const email = emailInput.value.trim();
     const password = passwordInput.value;
 
-
     if(!email || !password){
 
         message.style.color="#ffcc00";
-
-        message.textContent=
-            "Email aur password dono bharo.";
+        message.textContent="Email aur password dono bharo.";
 
         return;
     }
-
 
     loginBtn.disabled=true;
     loginBtn.textContent="Logging in...";
 
     message.style.color="white";
-
-    message.textContent=
-        "Login ho raha hai...";
-
+    message.textContent="Login ho raha hai...";
 
     try{
-
-        /* =========================
-           STEP 1: FIREBASE AUTH
-        ========================= */
 
         const result =
             await signInWithEmailAndPassword(
@@ -182,65 +168,46 @@ async function login(){
                 password
             );
 
-
         const uid = result.user.uid;
 
-
         console.log("AUTH UID:", uid);
-
 
         message.textContent=
             "Authentication successful...";
 
-
-        /* =========================
-           STEP 2: EXACT USERS DOCUMENT
-        ========================= */
-
         const userRef =
             doc(db, "Users", uid);
 
+        let userSnap;
 
-    let userSnap;
+        try {
 
-try {
-    userSnap = await getDoc(userRef);
-} catch(firestoreError) {
+            userSnap = await getDoc(userRef);
 
-    await signOut(auth);
+        } catch(firestoreError) {
 
-    message.style.color="#ff5252";
+            await signOut(auth);
 
-    message.innerHTML =
-        "<b>FIRESTORE ERROR</b><br><br>" +
-        "Error Code:<br>" +
-        (firestoreError.code || "unknown") +
-        "<br><br>" +
-        "Error Message:<br>" +
-        (firestoreError.message || "Unknown error") +
-        "<br><br>" +
-        "Firebase Project:<br>" +
-        "viktorix-game" +
-        "<br><br>" +
-        "Firestore Path:<br>" +
-        "Users / " + uid;
+            message.style.color="#ff5252";
 
-    loginBtn.disabled=false;
-    loginBtn.textContent="Login";
+            message.innerHTML =
+                "<b>FIRESTORE ERROR</b><br><br>" +
+                "Error Code:<br>" +
+                (firestoreError.code || "unknown") +
+                "<br><br>" +
+                "Error Message:<br>" +
+                (firestoreError.message || "Unknown error");
 
-    return;
-}
+            loginBtn.disabled=false;
+            loginBtn.textContent="Login";
 
+            return;
+        }
 
         console.log(
             "USER DOCUMENT EXISTS:",
             userSnap.exists()
         );
-
-
-        /* =========================
-           DOCUMENT NOT FOUND
-        ========================= */
 
         if(!userSnap.exists()){
 
@@ -262,21 +229,16 @@ try {
 
             return;
         }
-
-
-        /* =========================
+                /* =========================
            STEP 3: GET USER DATA
         ========================= */
 
-        const userData =
-            userSnap.data();
-
+        const userData = userSnap.data();
 
         console.log(
             "USER DATA:",
             userData
         );
-
 
         const role =
             userData.role || "";
@@ -331,19 +293,10 @@ try {
             "UID:<br>"+
             uid;
 
-
         console.log(
             "LOGIN SUCCESS",
             userData
         );
-
-
-        /*
-         * ABHI REDIRECT NAHI KAR RAHE.
-         *
-         * Pehle confirm karenge ki
-         * Firestore document correctly read ho raha hai.
-         */
 
 
         loginBtn.disabled=false;
@@ -357,9 +310,7 @@ try {
             error
         );
 
-
         message.style.color="#ff5252";
-
 
         message.innerHTML=
             "<b>LOGIN / FIRESTORE ERROR</b><br><br>"+
@@ -368,7 +319,6 @@ try {
             "<br><br>"+
             "Message:<br>"+
             (error.message || "Unknown error");
-
 
         loginBtn.disabled=false;
         loginBtn.textContent="Login";
