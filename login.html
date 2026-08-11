@@ -91,6 +91,7 @@ button:disabled{
 <h1>VIKTORIX</h1>
 
 <label>Email</label>
+
 <input
     type="email"
     id="username"
@@ -99,6 +100,7 @@ button:disabled{
 >
 
 <label>Password</label>
+
 <input
     type="password"
     id="password"
@@ -126,36 +128,52 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
 import {
-    collection,
-    getDocs
+    doc,
+    getDoc
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
 
 const message = document.getElementById("message");
 const loginBtn = document.getElementById("loginBtn");
+
 const emailInput = document.getElementById("username");
 const passwordInput = document.getElementById("password");
 
+
 loginBtn.addEventListener("click", login);
+
 
 async function login(){
 
     const email = emailInput.value.trim();
     const password = passwordInput.value;
 
+
     if(!email || !password){
+
         message.style.color="#ffcc00";
-        message.textContent="Email aur password dono bharo.";
+
+        message.textContent=
+            "Email aur password dono bharo.";
+
         return;
     }
 
+
     loginBtn.disabled=true;
     loginBtn.textContent="Logging in...";
+
     message.style.color="white";
-    message.textContent="Login ho raha hai...";
+
+    message.textContent=
+        "Login ho raha hai...";
+
 
     try{
 
-        /* AUTH */
+        /* =========================
+           STEP 1: FIREBASE AUTH
+        ========================= */
 
         const result =
             await signInWithEmailAndPassword(
@@ -164,87 +182,166 @@ async function login(){
                 password
             );
 
-        const uid=result.user.uid;
 
-        console.log("AUTH UID:",uid);
+        const uid = result.user.uid;
+
+
+        console.log("AUTH UID:", uid);
+
 
         message.textContent=
-            "Auth successful. Users collection check ho rahi hai...";
+            "Authentication successful...";
 
 
-        /* USERS COLLECTION TEST */
+        /* =========================
+           STEP 2: EXACT USERS DOCUMENT
+        ========================= */
 
-        const usersRef=collection(db,"Users");
+        const userRef =
+            doc(db, "Users", uid);
 
-        const snapshot=await getDocs(usersRef);
+
+        const userSnap =
+            await getDoc(userRef);
+
 
         console.log(
-            "USERS COUNT:",
-            snapshot.size
+            "USER DOCUMENT EXISTS:",
+            userSnap.exists()
         );
 
 
-        let ids=[];
+        /* =========================
+           DOCUMENT NOT FOUND
+        ========================= */
 
-        snapshot.forEach((item)=>{
-
-            console.log(
-                "DOCUMENT:",
-                item.id,
-                item.data()
-            );
-
-            ids.push(item.id);
-
-        });
-
-
-        /* RESULT */
-
-        if(snapshot.empty){
+        if(!userSnap.exists()){
 
             await signOut(auth);
 
             message.style.color="#ff5252";
 
             message.innerHTML=
-                "<b>USERS COLLECTION EMPTY</b><br><br>"+
-                "Website ko Users ka koi document nahi mila.<br><br>"+
-                "Auth UID:<br>"+
+                "<b>USER DOCUMENT NOT FOUND</b><br><br>"+
+                "Firebase Auth UID:<br>"+
+                uid+
+                "<br><br>"+
+                "Firestore path:<br>"+
+                "Users / "+
                 uid;
 
-        }else{
+            loginBtn.disabled=false;
+            loginBtn.textContent="Login";
 
-            message.style.color="#00ff88";
+            return;
+        }
 
-            message.innerHTML=
-                "<b>USERS COLLECTION FOUND</b><br><br>"+
-                "Documents: "+
-                snapshot.size+
-                "<br><br>"+
-                "IDs:<br>"+
-                ids.join("<br>");
+
+        /* =========================
+           STEP 3: GET USER DATA
+        ========================= */
+
+        const userData =
+            userSnap.data();
+
+
+        console.log(
+            "USER DATA:",
+            userData
+        );
+
+
+        const role =
+            userData.role || "";
+
+        const approved =
+            userData.approved === true;
+
+        const points =
+            userData.points ?? 0;
+
+
+        /* =========================
+           STEP 4: APPROVAL CHECK
+        ========================= */
+
+        if(!approved){
 
             await signOut(auth);
 
+            message.style.color="#ffcc00";
+
+            message.innerHTML=
+                "<b>ACCOUNT NOT APPROVED</b><br><br>"+
+                "Admin approval required.";
+
+            loginBtn.disabled=false;
+            loginBtn.textContent="Login";
+
+            return;
         }
+
+
+        /* =========================
+           STEP 5: SUCCESS
+        ========================= */
+
+        message.style.color="#00ff88";
+
+        message.innerHTML=
+            "<b>LOGIN SUCCESSFUL</b><br><br>"+
+            "Username: "+
+            (userData.username || "Unknown")+
+            "<br><br>"+
+            "Role: "+
+            role+
+            "<br><br>"+
+            "Approved: YES"+
+            "<br><br>"+
+            "Points: "+
+            points+
+            "<br><br>"+
+            "UID:<br>"+
+            uid;
+
+
+        console.log(
+            "LOGIN SUCCESS",
+            userData
+        );
+
+
+        /*
+         * ABHI REDIRECT NAHI KAR RAHE.
+         *
+         * Pehle confirm karenge ki
+         * Firestore document correctly read ho raha hai.
+         */
+
 
         loginBtn.disabled=false;
         loginBtn.textContent="Login";
 
+
     }catch(error){
 
-        console.error("TEST ERROR:",error);
+        console.error(
+            "LOGIN ERROR:",
+            error
+        );
+
 
         message.style.color="#ff5252";
 
+
         message.innerHTML=
-            "<b>FIRESTORE TEST ERROR</b><br><br>"+
-            "Code: "+
+            "<b>LOGIN / FIRESTORE ERROR</b><br><br>"+
+            "Code:<br>"+
             (error.code || "unknown")+
             "<br><br>"+
             "Message:<br>"+
             (error.message || "Unknown error");
+
 
         loginBtn.disabled=false;
         loginBtn.textContent="Login";
