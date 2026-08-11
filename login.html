@@ -3,10 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>VIKTORIX Login</title>
 
 <style>
-*{box-sizing:border-box}
+*{
+    box-sizing:border-box;
+}
 
 body{
     margin:0;
@@ -14,71 +17,131 @@ body{
     background:#03152f;
     color:white;
     font-family:Arial,sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
 }
 
 .container{
     width:90%;
-    max-width:400px;
-    margin:80px auto;
-    padding:30px 20px;
-    background:#051f46;
-    border-radius:15px;
-    box-shadow:0 0 25px rgba(0,191,255,.20);
+    max-width:420px;
 }
 
-h1{
+.logo{
     text-align:center;
-    color:#00bfff;
-    margin:0 0 30px;
-    font-size:32px;
+    margin-bottom:25px;
 }
 
-label{
-    display:block;
-    margin:12px 0 6px;
-    color:#cfefff;
+.logo h1{
+    margin:0;
+    font-size:42px;
+    color:#00bfff;
+    letter-spacing:3px;
+    text-shadow:0 0 15px #00bfff;
+}
+
+.logo p{
+    margin:8px 0 0;
+    color:#9ccfff;
     font-size:14px;
 }
 
-input{
+.login-box{
+    background:#051f46;
+    border:1px solid #0b5c91;
+    border-radius:18px;
+    padding:28px 22px;
+    box-shadow:0 0 25px rgba(0,191,255,.18);
+}
+
+.login-box h2{
+    text-align:center;
+    margin:0 0 25px;
+    font-size:25px;
+}
+
+.input-group{
+    margin-bottom:18px;
+}
+
+.input-group label{
+    display:block;
+    margin-bottom:7px;
+    font-size:14px;
+    color:#b9dcff;
+}
+
+.input-group input{
     width:100%;
     padding:14px;
-    margin-bottom:8px;
-    border:0;
-    outline:0;
-    border-radius:8px;
+    border-radius:10px;
+    border:1px solid #17669b;
+    outline:none;
+    background:#02152e;
+    color:white;
     font-size:16px;
 }
 
-button{
+.input-group input:focus{
+    border-color:#00bfff;
+    box-shadow:0 0 8px rgba(0,191,255,.35);
+}
+
+.login-btn{
     width:100%;
     padding:14px;
-    margin-top:15px;
     border:0;
-    border-radius:8px;
+    border-radius:10px;
     background:#00bfff;
-    color:white;
+    color:#00152b;
     font-size:17px;
     font-weight:bold;
+    cursor:pointer;
+    margin-top:5px;
 }
 
-button:disabled{
+.login-btn:disabled{
     opacity:.6;
+    cursor:not-allowed;
 }
 
-#message{
-    margin-top:20px;
-    padding:10px;
-    min-height:24px;
-    text-align:center;
-    word-break:break-word;
-    line-height:1.5;
+.login-btn:hover{
+    background:#27caff;
 }
 
-.info{
+.message{
+    display:none;
+    margin-top:18px;
+    padding:12px;
+    border-radius:8px;
     text-align:center;
+    font-size:14px;
+}
+
+.error{
+    background:#4a1010;
+    border:1px solid #ff4444;
+    color:#ffb0b0;
+}
+
+.success{
+    background:#0d421f;
+    border:1px solid #22cc66;
+    color:#aaffc5;
+}
+
+.loading{
+    text-align:center;
+    display:none;
     margin-top:15px;
-    color:#9ec7dd;
+    color:#9ccfff;
+    font-size:14px;
+}
+
+.footer{
+    text-align:center;
+    margin-top:20px;
+    color:#7698b8;
     font-size:12px;
 }
 </style>
@@ -88,43 +151,64 @@ button:disabled{
 
 <div class="container">
 
-<h1>VIKTORIX</h1>
+    <div class="logo">
+        <h1>VIKTORIX</h1>
+        <p>Gaming Platform</p>
+    </div>
 
-<label>Email</label>
+    <div class="login-box">
 
-<input
-    type="email"
-    id="username"
-    placeholder="Enter your email"
-    autocomplete="email"
->
+        <h2>Login</h2>
 
-<label>Password</label>
+        <div class="input-group">
+            <label for="email">Email</label>
+            <input
+                type="email"
+                id="email"
+                placeholder="Enter your email"
+                autocomplete="email"
+            >
+        </div>
 
-<input
-    type="password"
-    id="password"
-    placeholder="Enter your password"
-    autocomplete="current-password"
->
+        <div class="input-group">
+            <label for="password">Password</label>
+            <input
+                type="password"
+                id="password"
+                placeholder="Enter your password"
+                autocomplete="current-password"
+            >
+        </div>
 
-<button id="loginBtn">Login</button>
+        <button
+            type="button"
+            class="login-btn"
+            id="loginBtn"
+        >
+            LOGIN
+        </button>
 
-<div id="message"></div>
+        <div class="loading" id="loading">
+            Checking account...
+        </div>
 
-<div class="info">
-VIKTORIX Secure Login
-</div>
+        <div class="message error" id="errorMessage"></div>
+
+        <div class="message success" id="successMessage"></div>
+
+    </div>
+
+    <div class="footer">
+        © 2026 VIKTORIX. All Rights Reserved.
+    </div>
 
 </div>
 
 <script type="module">
 
-import { auth, db } from "./firebase.js";
-
 import {
     signInWithEmailAndPassword,
-    signOut
+    onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
 import {
@@ -132,201 +216,219 @@ import {
     getDoc
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
-const message = document.getElementById("message");
-const loginBtn = document.getElementById("loginBtn");
+import {
+    auth,
+    db
+} from "./firebase.js";
 
-const emailInput = document.getElementById("username");
+
+const emailInput = document.getElementById("email");
 const passwordInput = document.getElementById("password");
 
-loginBtn.addEventListener("click", login);
+const loginBtn = document.getElementById("loginBtn");
 
-async function login(){
+const loading = document.getElementById("loading");
+const errorMessage = document.getElementById("errorMessage");
+const successMessage = document.getElementById("successMessage");
+
+
+function showError(message){
+
+    errorMessage.textContent = message;
+    errorMessage.style.display = "block";
+
+    successMessage.style.display = "none";
+}
+
+
+function showSuccess(message){
+
+    successMessage.textContent = message;
+    successMessage.style.display = "block";
+
+    errorMessage.style.display = "none";
+}
+
+
+function setLoading(state){
+
+    loading.style.display = state ? "block" : "none";
+
+    loginBtn.disabled = state;
+
+    loginBtn.textContent = state ? "PLEASE WAIT..." : "LOGIN";
+}
+
+
+loginBtn.addEventListener("click", async () => {
 
     const email = emailInput.value.trim();
     const password = passwordInput.value;
 
-    if(!email || !password){
+    errorMessage.style.display = "none";
+    successMessage.style.display = "none";
 
-        message.style.color="#ffcc00";
-        message.textContent="Email aur password dono bharo.";
 
+    if(!email){
+
+        showError("Please enter your email.");
         return;
     }
 
-    loginBtn.disabled=true;
-    loginBtn.textContent="Logging in...";
 
-    message.style.color="white";
-    message.textContent="Login ho raha hai...";
+    if(!password){
+
+        showError("Please enter your password.");
+        return;
+    }
+
+
+    setLoading(true);
+
 
     try{
 
-        const result =
+        const userCredential =
             await signInWithEmailAndPassword(
                 auth,
                 email,
                 password
             );
 
-        const uid = result.user.uid;
 
-        console.log("AUTH UID:", uid);
+        const user = userCredential.user;
 
-        message.textContent=
-            "Authentication successful...";
+
+        /*
+         * Firestore Users document
+         * Document ID = Firebase Authentication UID
+         */
 
         const userRef =
-            doc(db, "Users", uid);
+            doc(db, "Users", user.uid);
 
-        let userSnap;
+        const userSnap =
+            await getDoc(userRef);
 
-        try {
-
-            userSnap = await getDoc(userRef);
-
-        } catch(firestoreError) {
-
-            await signOut(auth);
-
-            message.style.color="#ff5252";
-
-            message.innerHTML =
-                "<b>FIRESTORE ERROR</b><br><br>" +
-                "Error Code:<br>" +
-                (firestoreError.code || "unknown") +
-                "<br><br>" +
-                "Error Message:<br>" +
-                (firestoreError.message || "Unknown error");
-
-            loginBtn.disabled=false;
-            loginBtn.textContent="Login";
-
-            return;
-        }
-
-        console.log(
-            "USER DOCUMENT EXISTS:",
-            userSnap.exists()
-        );
 
         if(!userSnap.exists()){
 
-            await signOut(auth);
+            await auth.signOut();
 
-            message.style.color="#ff5252";
+            showError(
+                "User account data not found in Firestore."
+            );
 
-            message.innerHTML=
-                "<b>USER DOCUMENT NOT FOUND</b><br><br>"+
-                "Firebase Auth UID:<br>"+
-                uid+
-                "<br><br>"+
-                "Firestore path:<br>"+
-                "Users / "+
-                uid;
-
-            loginBtn.disabled=false;
-            loginBtn.textContent="Login";
-
+            setLoading(false);
             return;
         }
-                /* =========================
-           STEP 3: GET USER DATA
-        ========================= */
-
-        const userData = userSnap.data();
-
-        console.log(
-            "USER DATA:",
-            userData
-        );
-
-        const role =
-            userData.role || "";
-
-        const approved =
-            userData.approved === true;
-
-        const points =
-            userData.points ?? 0;
 
 
-        /* =========================
-           STEP 4: APPROVAL CHECK
-        ========================= */
+        const userData =
+            userSnap.data();
 
-        if(!approved){
 
-            await signOut(auth);
+        /*
+         * Admin account
+         */
 
-            message.style.color="#ffcc00";
+        if(userData.role === "admin"){
 
-            message.innerHTML=
-                "<b>ACCOUNT NOT APPROVED</b><br><br>"+
-                "Admin approval required.";
+            showSuccess("Admin login successful.");
 
-            loginBtn.disabled=false;
-            loginBtn.textContent="Login";
+            setTimeout(() => {
+
+                window.location.href =
+                    "admin.html";
+
+            }, 800);
 
             return;
         }
 
 
-        /* =========================
-           STEP 5: SUCCESS
-        ========================= */
+        /*
+         * Normal user must be approved
+         */
 
-        message.style.color="#00ff88";
+        if(userData.approved !== true){
 
-        message.innerHTML=
-            "<b>LOGIN SUCCESSFUL</b><br><br>"+
-            "Username: "+
-            (userData.username || "Unknown")+
-            "<br><br>"+
-            "Role: "+
-            role+
-            "<br><br>"+
-            "Approved: YES"+
-            "<br><br>"+
-            "Points: "+
-            points+
-            "<br><br>"+
-            "UID:<br>"+
-            uid;
+            await auth.signOut();
 
-        console.log(
-            "LOGIN SUCCESS",
-            userData
-        );
+            showError(
+                "Your account is not approved by admin yet."
+            );
+
+            setLoading(false);
+            return;
+        }
 
 
-        loginBtn.disabled=false;
-        loginBtn.textContent="Login";
+        /*
+         * Approved user
+         */
+
+        showSuccess("Login successful.");
+
+        setTimeout(() => {
+
+            window.location.href =
+                "index.html";
+
+        }, 800);
 
 
     }catch(error){
 
-        console.error(
-            "LOGIN ERROR:",
-            error
-        );
+        console.error("LOGIN ERROR:", error);
 
-        message.style.color="#ff5252";
 
-        message.innerHTML=
-            "<b>LOGIN / FIRESTORE ERROR</b><br><br>"+
-            "Code:<br>"+
-            (error.code || "unknown")+
-            "<br><br>"+
-            "Message:<br>"+
-            (error.message || "Unknown error");
+        let message =
+            "Login failed. Please try again.";
 
-        loginBtn.disabled=false;
-        loginBtn.textContent="Login";
+
+        if(error.code === "auth/invalid-credential"){
+
+            message =
+                "Invalid email or password.";
+        }
+
+        else if(error.code === "auth/user-not-found"){
+
+            message =
+                "No account found with this email.";
+        }
+
+        else if(error.code === "auth/wrong-password"){
+
+            message =
+                "Incorrect password.";
+        }
+
+        else if(error.code === "auth/invalid-email"){
+
+            message =
+                "Please enter a valid email.";
+        }
+
+        else if(error.code === "auth/too-many-requests"){
+
+            message =
+                "Too many attempts. Please try again later.";
+        }
+
+        else if(error.code === "permission-denied"){
+
+            message =
+                "Firestore permission denied.";
+        }
+
+
+        showError(message);
+
+        setLoading(false);
     }
 
-}
+});
 
 </script>
-
-</body>
-</html>
