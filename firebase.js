@@ -19,4 +19,8 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+console.log("FIREBASE PROJECT:", app.options.projectId);
+console.log("FIRESTORE READY:", !!db);
+console.log("AUTH READY:", !!auth);
+
 export { db, auth };
