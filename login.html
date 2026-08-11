@@ -298,14 +298,19 @@ loginBtn.addEventListener("click", async () => {
 
         const user = userCredential.user;
 
+console.log("LOGIN UID:", user.uid);
+console.log("LOGIN EMAIL:", user.email);
 
-        /*
-         * Firestore Users document
-         * Document ID = Firebase Authentication UID
-         */
+showSuccess("Login UID: " + user.uid);
 
-        const userRef =
-            doc(db, "Users", user.uid);
+
+/*
+ * Firestore Users document
+ * Document ID = Firebase Authentication UID
+ */
+
+const userRef =
+    doc(db, "Users", user.uid);
 
         const userSnap =
             await getDoc(userRef);
