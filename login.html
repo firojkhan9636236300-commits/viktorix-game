@@ -201,8 +201,35 @@ async function login(){
             doc(db, "Users", uid);
 
 
-        const userSnap =
-            await getDoc(userRef);
+    let userSnap;
+
+try {
+    userSnap = await getDoc(userRef);
+} catch(firestoreError) {
+
+    await signOut(auth);
+
+    message.style.color="#ff5252";
+
+    message.innerHTML =
+        "<b>FIRESTORE ERROR</b><br><br>" +
+        "Error Code:<br>" +
+        (firestoreError.code || "unknown") +
+        "<br><br>" +
+        "Error Message:<br>" +
+        (firestoreError.message || "Unknown error") +
+        "<br><br>" +
+        "Firebase Project:<br>" +
+        "viktorix-game" +
+        "<br><br>" +
+        "Firestore Path:<br>" +
+        "Users / " + uid;
+
+    loginBtn.disabled=false;
+    loginBtn.textContent="Login";
+
+    return;
+}
 
 
         console.log(
