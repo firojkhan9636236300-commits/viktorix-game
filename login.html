@@ -312,21 +312,33 @@ showSuccess("Login UID: " + user.uid);
 const userRef =
     doc(db, "Users", user.uid);
 
-        const userSnap =
-            await getDoc(userRef);
+ const userSnap =
+    await getDoc(userRef);
 
 
-        if(!userSnap.exists()){
+if(!userSnap.exists()){
 
-            await auth.signOut();
+    await auth.signOut();
 
-            showError(
-                "User account data not found in Firestore."
-            );
+    showError(
+        "Firestore document NOT FOUND"
+    );
 
-            setLoading(false);
-            return;
-        }
+    const debug = document.createElement("div");
+
+    debug.style.cssText =
+        "margin-top:15px;padding:12px;background:#222;color:#00ff88;border-radius:8px;text-align:center;word-break:break-all;font-size:13px;";
+
+    debug.innerHTML =
+        "Login UID:<br><b>" + user.uid + "</b><br><br>" +
+        "Firestore Path:<br><b>Users/" + user.uid + "</b>";
+
+    document.querySelector(".login-box").appendChild(debug);
+
+    setLoading(false);
+    return;
+}
+    
 
 
         const userData =
