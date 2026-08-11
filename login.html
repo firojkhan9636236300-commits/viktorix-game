@@ -213,7 +213,7 @@ import {
 
 import {
     doc,
-    getDoc
+    getDocFromServer
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 import {
@@ -313,7 +313,7 @@ const userRef =
     doc(db, "Users", user.uid);
 
  const userSnap =
-    await getDoc(userRef);
+    await getDocFromServer(userRef);
 
 
 if(!userSnap.exists()){
