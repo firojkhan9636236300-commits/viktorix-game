@@ -41,8 +41,8 @@ window.sendOTP = async function () {
         auth,
         "recaptcha-container",
         {
-          size: "normal"
-        }
+  size: "invisible"
+}
       );
 
       await window.recaptchaVerifier.render();
