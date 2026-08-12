@@ -213,7 +213,7 @@ import {
 
 import {
     doc,
-    getDocFromServer
+    getDoc
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 import {
@@ -298,47 +298,45 @@ loginBtn.addEventListener("click", async () => {
 
         const user = userCredential.user;
 
-console.log("LOGIN UID:", user.uid);
-console.log("LOGIN EMAIL:", user.email);
-
-showSuccess("Login UID: " + user.uid);
+        console.log("LOGIN UID:", user.uid);
+        console.log("LOGIN EMAIL:", user.email);
 
 
-/*
- * Firestore Users document
- * Document ID = Firebase Authentication UID
- */
+        /*
+         * Firestore Users document
+         * Document ID = Firebase Authentication UID
+         */
 
-const userRef =
-    doc(db, "Users", user.uid);
-
- const userSnap =
-    await getDocFromServer(userRef);
+        const userRef =
+            doc(db, "Users", user.uid);
 
 
-if(!userSnap.exists()){
+        const userSnap =
+            await getDoc(userRef);
 
-    await auth.signOut();
 
-    showError(
-        "Firestore document NOT FOUND"
-    );
+        if(!userSnap.exists()){
 
-    const debug = document.createElement("div");
+            await auth.signOut();
 
-    debug.style.cssText =
-        "margin-top:15px;padding:12px;background:#222;color:#00ff88;border-radius:8px;text-align:center;word-break:break-all;font-size:13px;";
+            showError(
+                "Firestore document NOT FOUND"
+            );
 
-    debug.innerHTML =
-        "Login UID:<br><b>" + user.uid + "</b><br><br>" +
-        "Firestore Path:<br><b>Users/" + user.uid + "</b>";
+            const debug = document.createElement("div");
 
-    document.querySelector(".login-box").appendChild(debug);
+            debug.style.cssText =
+                "margin-top:15px;padding:12px;background:#222;color:#00ff88;border-radius:8px;text-align:center;word-break:break-all;font-size:13px;";
 
-    setLoading(false);
-    return;
-}
-    
+            debug.innerHTML =
+                "Login UID:<br><b>" + user.uid + "</b><br><br>" +
+                "Firestore Path:<br><b>Users/" + user.uid + "</b>";
+
+            document.querySelector(".login-box").appendChild(debug);
+
+            setLoading(false);
+            return;
+        }
 
 
         const userData =
@@ -449,3 +447,6 @@ if(!userSnap.exists()){
 });
 
 </script>
+
+</body>
+</html>
