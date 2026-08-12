@@ -17,11 +17,23 @@
 
 <br><br>
 
-<input id="password" type="password" placeholder="Password">
+<input id="phone" type="tel" placeholder="+91XXXXXXXXXX">
 
 <br><br>
 
-<button onclick="register()">Register</button>
+<div id="recaptcha-container"></div>
+
+<br>
+
+<button onclick="sendOTP()">Send OTP</button>
+
+<br><br>
+
+<input id="otp" type="text" placeholder="Enter OTP" maxlength="6">
+
+<br><br>
+
+<button onclick="verifyOTP()">Verify & Create Account</button>
 
 <br><br>
 
