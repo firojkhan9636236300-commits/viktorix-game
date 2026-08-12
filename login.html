@@ -311,11 +311,36 @@ loginBtn.addEventListener("click", async () => {
             doc(db, "Users", user.uid);
 
 
-        const userSnap =
-            await getDoc(userRef);
+        const userSnap = await getDoc(userRef);
 
+console.log("FIRESTORE PROJECT:", db.app.options.projectId);
+console.log("FIRESTORE PATH:", "Users/" + user.uid);
+console.log("DOCUMENT EXISTS:", userSnap.exists());
+console.log("DOCUMENT DATA:", userSnap.data());
 
-        if(!userSnap.exists()){
+if(!userSnap.exists()){
+
+    await auth.signOut();
+
+    showError(
+        "Firestore document NOT FOUND"
+    );
+
+    const debug = document.createElement("div");
+
+    debug.style.cssText =
+        "margin-top:15px;padding:12px;background:#222;color:#00ff88;border-radius:8px;text-align:center;word-break:break-all;font-size:13px;";
+
+    debug.innerHTML =
+        "Project:<br><b>" + db.app.options.projectId + "</b><br><br>" +
+        "Login UID:<br><b>" + user.uid + "</b><br><br>" +
+        "Firestore Path:<br><b>Users/" + user.uid + "</b>";
+
+    document.querySelector(".login-box").appendChild(debug);
+
+    setLoading(false);
+    return;
+}
 
             await auth.signOut();
 
