@@ -3,7 +3,8 @@
 import { auth, db } from "./firebase.js";
 
 import {
-  createUserWithEmailAndPassword,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
   signInWithEmailAndPassword,
   signOut
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
@@ -16,46 +17,54 @@ import {
 
 
 // =====================
-// REGISTER
+// PHONE REGISTER
 // =====================
 
-window.register = async function () {
+let confirmationResult = null;
+
+window.sendOTP = async function () {
 
   const username = document.getElementById("username").value.trim();
-  const password = document.getElementById("password").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  const message = document.getElementById("message");
 
-  if (!username || !password) {
-    alert("Email aur Password bharo");
+  if (!username || !phone) {
+    message.innerText = "Username aur Phone Number bharo.";
     return;
   }
 
   try {
 
-    // Gmail se register/login
-    const email = username;
+    if (!window.recaptchaVerifier) {
 
-    const userCredential = await createUserWithEmailAndPassword(
+      window.recaptchaVerifier = new RecaptchaVerifier(
+        auth,
+        "recaptcha-container",
+        {
+          size: "normal"
+        }
+      );
+
+      await window.recaptchaVerifier.render();
+    }
+
+    confirmationResult = await signInWithPhoneNumber(
       auth,
-      email,
-      password
+      phone,
+      window.recaptchaVerifier
     );
 
-    const user = userCredential.user;
-
-    await setDoc(doc(db, "Users", user.uid), {
-      username: email,
-      role: "user",
-      approved: false,
-      points: 0
-    });
-
-    alert("Account ban gaya. Admin approval ka wait kare.");
-
-    window.location.href = "login.html";
+    message.innerText = "OTP phone par bhej diya gaya.";
 
   } catch (error) {
 
-    alert(error.message);
+    console.error(error);
+    message.innerText = error.message;
+
+    if (window.recaptchaVerifier) {
+      window.recaptchaVerifier.clear();
+      window.recaptchaVerifier = null;
+    }
 
   }
 
@@ -63,7 +72,59 @@ window.register = async function () {
 
 
 // =====================
-// LOGIN
+// VERIFY OTP
+// =====================
+
+window.verifyOTP = async function () {
+
+  const username = document.getElementById("username").value.trim();
+  const otp = document.getElementById("otp").value.trim();
+  const message = document.getElementById("message");
+
+  if (!username || !otp) {
+    message.innerText = "Username aur OTP bharo.";
+    return;
+  }
+
+  if (!confirmationResult) {
+    message.innerText = "Pehle Send OTP dabao.";
+    return;
+  }
+
+  try {
+
+    const result = await confirmationResult.confirm(otp);
+
+    const user = result.user;
+
+    await setDoc(doc(db, "Users", user.uid), {
+
+      username: username,
+      role: "user",
+      approved: false,
+      points: 0
+
+    });
+
+    message.innerText =
+      "Account ban gaya. Admin approval ka wait kare.";
+
+    setTimeout(() => {
+      window.location.href = "login.html";
+    }, 1500);
+
+  } catch (error) {
+
+    console.error(error);
+    message.innerText = error.message;
+
+  }
+
+};
+
+
+// =====================
+// EMAIL LOGIN - OLD ADMIN
 // =====================
 
 window.login = async function () {
@@ -78,16 +139,17 @@ window.login = async function () {
 
   try {
 
-    const email = username;
-
     const result = await signInWithEmailAndPassword(
       auth,
-      email,
+      username,
       password
     );
-        const uid = result.user.uid;
 
-    const userDoc = await getDoc(doc(db, "Users", uid));
+    const uid = result.user.uid;
+
+    const userDoc = await getDoc(
+      doc(db, "Users", uid)
+    );
 
     if (!userDoc.exists()) {
       alert("User data nahi mila");
@@ -96,12 +158,18 @@ window.login = async function () {
 
     const data = userDoc.data();
 
-    if (data.role === "admin" && data.approved === true) {
+    if (
+      data.role === "admin" &&
+      data.approved === true
+    ) {
       window.location.href = "admin.html";
       return;
     }
 
-    if (data.role === "user" && data.approved === true) {
+    if (
+      data.role === "user" &&
+      data.approved === true
+    ) {
       window.location.href = "index.html";
       return;
     }
@@ -127,6 +195,7 @@ window.adminLogin = window.login;
 // =====================
 // LOGOUT
 // =====================
+
 window.logout = async function () {
 
   try {
