@@ -207,8 +207,7 @@ body{
 <script type="module">
 
 import {
-    signInWithEmailAndPassword,
-    onAuthStateChanged
+    signInWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
 import {
@@ -288,6 +287,8 @@ loginBtn.addEventListener("click", async () => {
 
     try{
 
+        /* Firebase Authentication */
+
         const userCredential =
             await signInWithEmailAndPassword(
                 auth,
@@ -298,49 +299,40 @@ loginBtn.addEventListener("click", async () => {
 
         const user = userCredential.user;
 
+
         console.log("LOGIN UID:", user.uid);
         console.log("LOGIN EMAIL:", user.email);
 
 
-        /*
-         * Firestore Users document
-         * Document ID = Firebase Authentication UID
-         */
+        /* Firestore Users document */
 
         const userRef =
             doc(db, "Users", user.uid);
 
 
-        const userSnap = await getDoc(userRef);
+        const userSnap =
+            await getDoc(userRef);
 
-console.log("FIRESTORE PROJECT:", db.app.options.projectId);
-console.log("FIRESTORE PATH:", "Users/" + user.uid);
-console.log("DOCUMENT EXISTS:", userSnap.exists());
-console.log("DOCUMENT DATA:", userSnap.data());
 
-if(!userSnap.exists()){
+        console.log(
+            "FIRESTORE PROJECT:",
+            "viktorix-game"
+        );
 
-    await auth.signOut();
+        console.log(
+            "FIRESTORE PATH:",
+            "Users/" + user.uid
+        );
 
-    showError(
-        "Firestore document NOT FOUND"
-    );
+        console.log(
+            "DOCUMENT EXISTS:",
+            userSnap.exists()
+        );
 
-    const debug = document.createElement("div");
 
-    debug.style.cssText =
-        "margin-top:15px;padding:12px;background:#222;color:#00ff88;border-radius:8px;text-align:center;word-break:break-all;font-size:13px;";
+        /* Document not found */
 
-    debug.innerHTML =
-        "Project:<br><b>" + db.app.options.projectId + "</b><br><br>" +
-        "Login UID:<br><b>" + user.uid + "</b><br><br>" +
-        "Firestore Path:<br><b>Users/" + user.uid + "</b>";
-
-    document.querySelector(".login-box").appendChild(debug);
-
-    setLoading(false);
-    return;
-}
+        if(!userSnap.exists()){
 
             await auth.signOut();
 
@@ -348,33 +340,51 @@ if(!userSnap.exists()){
                 "Firestore document NOT FOUND"
             );
 
-            const debug = document.createElement("div");
+            const debug =
+                document.createElement("div");
 
             debug.style.cssText =
                 "margin-top:15px;padding:12px;background:#222;color:#00ff88;border-radius:8px;text-align:center;word-break:break-all;font-size:13px;";
 
             debug.innerHTML =
-                "Login UID:<br><b>" + user.uid + "</b><br><br>" +
-                "Firestore Path:<br><b>Users/" + user.uid + "</b>";
+                "Project:<br><b>viktorix-game</b><br><br>" +
+                "Login UID:<br><b>" +
+                user.uid +
+                "</b><br><br>" +
+                "Firestore Path:<br><b>" +
+                "Users/" +
+                user.uid +
+                "</b>";
 
-            document.querySelector(".login-box").appendChild(debug);
+            document
+                .querySelector(".login-box")
+                .appendChild(debug);
 
             setLoading(false);
+
             return;
         }
 
+
+        /* Get Firestore data */
 
         const userData =
             userSnap.data();
 
 
-        /*
-         * Admin account
-         */
+        console.log(
+            "USER DATA:",
+            userData
+        );
+
+
+        /* ADMIN */
 
         if(userData.role === "admin"){
 
-            showSuccess("Admin login successful.");
+            showSuccess(
+                "Admin login successful."
+            );
 
             setTimeout(() => {
 
@@ -387,9 +397,7 @@ if(!userSnap.exists()){
         }
 
 
-        /*
-         * Normal user must be approved
-         */
+        /* NORMAL USER */
 
         if(userData.approved !== true){
 
@@ -400,15 +408,16 @@ if(!userSnap.exists()){
             );
 
             setLoading(false);
+
             return;
         }
 
 
-        /*
-         * Approved user
-         */
+        /* APPROVED USER */
 
-        showSuccess("Login successful.");
+        showSuccess(
+            "Login successful."
+        );
 
         setTimeout(() => {
 
@@ -420,44 +429,65 @@ if(!userSnap.exists()){
 
     }catch(error){
 
-        console.error("LOGIN ERROR:", error);
+        console.error(
+            "LOGIN ERROR:",
+            error
+        );
 
 
         let message =
             "Login failed. Please try again.";
 
 
-        if(error.code === "auth/invalid-credential"){
+        if(
+            error.code ===
+            "auth/invalid-credential"
+        ){
 
             message =
                 "Invalid email or password.";
         }
 
-        else if(error.code === "auth/user-not-found"){
+        else if(
+            error.code ===
+            "auth/user-not-found"
+        ){
 
             message =
                 "No account found with this email.";
         }
 
-        else if(error.code === "auth/wrong-password"){
+        else if(
+            error.code ===
+            "auth/wrong-password"
+        ){
 
             message =
                 "Incorrect password.";
         }
 
-        else if(error.code === "auth/invalid-email"){
+        else if(
+            error.code ===
+            "auth/invalid-email"
+        ){
 
             message =
                 "Please enter a valid email.";
         }
 
-        else if(error.code === "auth/too-many-requests"){
+        else if(
+            error.code ===
+            "auth/too-many-requests"
+        ){
 
             message =
                 "Too many attempts. Please try again later.";
         }
 
-        else if(error.code === "permission-denied"){
+        else if(
+            error.code ===
+            "permission-denied"
+        ){
 
             message =
                 "Firestore permission denied.";
