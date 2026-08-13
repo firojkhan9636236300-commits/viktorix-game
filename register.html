@@ -6,42 +6,109 @@
 
 <title>VIKTORIX Register</title>
 
+<style>
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  padding: 30px;
+}
+
+input {
+  width: 90%;
+  max-width: 350px;
+  padding: 12px;
+  margin: 8px 0;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+button {
+  width: 90%;
+  max-width: 350px;
+  padding: 12px;
+  margin: 8px 0;
+  font-size: 16px;
+  cursor: pointer;
+}
+</style>
+
 </head>
+
 <body>
 
 <h1>🎮 VIKTORIX</h1>
 
 <h2>Create Account</h2>
 
-<input id="username" type="text" placeholder="Username">
+<input
+  id="username"
+  type="text"
+  placeholder="Username"
+  autocomplete="username"
+>
 
-<br><br>
+<br>
 
-<input id="phone" type="tel" placeholder="+91XXXXXXXXXX">
+<input
+  id="phone"
+  type="tel"
+  placeholder="9636236300"
+  inputmode="numeric"
+  autocomplete="tel"
+>
 
-<br><br>
+<br>
 
 <div id="recaptcha-container"></div>
 
 <br>
 
-<button onclick="sendOTP()">Send OTP</button>
+<button type="button" id="sendOtpBtn">
+  Send OTP
+</button>
 
-<br><br>
+<br>
 
-<input id="otp" type="text" placeholder="Enter OTP" maxlength="6">
+<input
+  id="otp"
+  type="text"
+  placeholder="Enter OTP"
+  maxlength="6"
+  inputmode="numeric"
+>
 
-<br><br>
+<br>
 
-<button onclick="verifyOTP()">Verify & Create Account</button>
+<button type="button" id="verifyOtpBtn">
+  Verify & Create Account
+</button>
 
-<br><br>
+<br>
 
 <p id="message"></p>
 
 <a href="login.html">Already have account? Login</a>
 
-<script type="module" src="auth.js"></script>
+
+<script type="module">
+
+import "./auth.js";
+
+document.getElementById("sendOtpBtn").addEventListener(
+  "click",
+  function () {
+    window.sendOTP();
+  }
+);
+
+document.getElementById("verifyOtpBtn").addEventListener(
+  "click",
+  function () {
+    window.verifyOTP();
+  }
+);
+
+</script>
 
 </body>
 </html>
